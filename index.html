@@ -3,53 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rhythm Lonavala — WhatsApp Pre-Arrival Dashboard</title>
+<title>Rhythm Lonavala — WhatsApp Outreach Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #333; }
-  header { background: #1a3c34; color: white; padding: 20px 32px; }
-  header h1 { font-size: 22px; font-weight: 600; }
-  header p { font-size: 13px; opacity: 0.75; margin-top: 4px; }
-  .stats { display: flex; gap: 16px; padding: 24px 32px; flex-wrap: wrap; }
-  .stat { background: white; border-radius: 10px; padding: 20px 28px; flex: 1;
-           min-width: 160px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-  .stat .num { font-size: 36px; font-weight: 700; color: #1a3c34; }
-  .stat .label { font-size: 13px; color: #888; margin-top: 4px; }
-  .table-wrap { padding: 0 32px 32px; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; background: white;
-           border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-  th { background: #1a3c34; color: white; text-align: left; padding: 12px 16px;
-        font-size: 13px; font-weight: 500; }
-  td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafafa; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px;
-            font-size: 11px; font-weight: 600; }
-  .badge.sent { background: #d4edda; color: #155724; }
-  .badge.failed { background: #f8d7da; color: #721c24; }
-  .response-cell { color: #555; font-style: italic; max-width: 220px; }
-  .empty { text-align: center; padding: 48px; color: #aaa; font-size: 15px; }
-  .last-updated { text-align: right; font-size: 11px; color: #aaa; padding: 8px 32px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#222}
+  header{background:#1a3c34;color:#fff;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  header h1{font-size:20px;font-weight:600}
+  header p{font-size:12px;opacity:.7;margin-top:3px}
+  .date-select{background:#fff;color:#1a3c34;border:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  .kpis{display:flex;gap:14px;padding:22px 32px 0;flex-wrap:wrap}
+  .kpi{background:#fff;border-radius:10px;padding:16px 22px;flex:1;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .kpi .num{font-size:32px;font-weight:700;color:#1a3c34}
+  .kpi .lbl{font-size:12px;color:#888;margin-top:3px}
+  .charts{display:flex;gap:16px;padding:18px 32px;flex-wrap:wrap}
+  .chart-box{background:#fff;border-radius:10px;padding:18px;flex:1;min-width:280px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .chart-box h3{font-size:13px;color:#555;margin-bottom:12px;font-weight:500}
+  .table-wrap{padding:0 32px 32px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  th{background:#1a3c34;color:#fff;text-align:left;padding:11px 14px;font-size:12px;font-weight:500}
+  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge.sent{background:#d4edda;color:#155724}
+  .badge.failed{background:#f8d7da;color:#721c24}
+  .badge.yes{background:#cce5ff;color:#004085}
+  .badge.no{background:#f0f0f0;color:#666}
+  .response-cell{color:#555;font-style:italic;max-width:200px}
+  .empty{text-align:center;padding:60px;color:#aaa;font-size:15px}
+  .last-updated{text-align:right;font-size:11px;color:#aaa;padding:6px 32px 0}
+  .section-title{padding:18px 32px 4px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
 <body>
+
 <header>
-  <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
-  <p>48-hour pre-arrival messages sent to upcoming guests</p>
+  <div>
+    <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
+    <p>48-hour pre-arrival messages · Guest responses · Actions taken</p>
+  </div>
+  <select class="date-select" id="datePicker">
+    <option>No data yet</option>
+  </select>
 </header>
 
-<div class="stats">
-  <div class="stat"><div class="num">0</div><div class="label">Messages Sent</div></div>
-  <div class="stat"><div class="num">0</div><div class="label">Responses Received</div></div>
-  <div class="stat"><div class="num">0</div><div class="label">Actions Taken</div></div>
-  <div class="stat"><div class="num">0</div><div class="label">No Response</div></div>
-</div>
-
 <div class="last-updated">Last updated: <span id="ts"></span></div>
-<script>document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});</script>
 
-<div class="table-wrap">
-<div class="empty">No messages sent yet.</div>
+<div class="kpis">
+  <div class="kpi"><div class="num" id="k-sent">0</div><div class="lbl">Messages Sent</div></div>
+  <div class="kpi"><div class="num" id="k-replied">0</div><div class="lbl">Responses Received</div></div>
+  <div class="kpi"><div class="num" id="k-cta">0</div><div class="lbl">Called Us (CTA)</div></div>
+  <div class="kpi"><div class="num" id="k-actioned">0</div><div class="lbl">Actions Taken</div></div>
+  <div class="kpi"><div class="num" id="k-no-reply">0</div><div class="lbl">No Response</div></div>
 </div>
+
+<div class="charts">
+  <div class="chart-box" style="max-width:320px">
+    <h3>Response Breakdown</h3>
+    <canvas id="donutChart" height="180"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>Messages Sent by Date (last 14 days)</h3>
+    <canvas id="barChart" height="180"></canvas>
+  </div>
+</div>
+
+<div class="section-title">Message Log</div>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Guest Name</th>
+        <th>Phone</th>
+        <th>Check-in Date</th>
+        <th>Confirmation ID</th>
+        <th>Status</th>
+        <th>Guest Response</th>
+        <th>Called Us</th>
+        <th>Action Taken</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="8" class="empty">Select a date above</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+
+  const ALL_DATA = {};
+  const latestDate = "";
+
+  let donutChart = null;
+  let barChart = null;
+
+  function renderDashboard(date) {
+    const records = ALL_DATA[date] || [];
+
+    const sent     = records.length;
+    const replied  = records.filter(r => String(r['Response']||'').trim()).length;
+    const cta      = records.filter(r => String(r['CTA Clicked']||'').toLowerCase() === 'yes').length;
+    const actioned = records.filter(r => String(r['Action Taken']||'').trim()).length;
+    const noReply  = sent - replied;
+
+    document.getElementById('k-sent').textContent     = sent;
+    document.getElementById('k-replied').textContent  = replied;
+    document.getElementById('k-cta').textContent      = cta;
+    document.getElementById('k-actioned').textContent = actioned;
+    document.getElementById('k-no-reply').textContent = noReply;
+
+    // Donut chart
+    if (donutChart) donutChart.destroy();
+    donutChart = new Chart(document.getElementById('donutChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Replied', 'Called CTA', 'No Response'],
+        datasets: [{ data: [replied, cta, noReply],
+          backgroundColor: ['#22c55e','#3b82f6','#e5e7eb'],
+          borderWidth: 0 }]
+      },
+      options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, cutout: '65%' }
+    });
+
+    // Table
+    const tbody = document.getElementById('tableBody');
+    if (!records.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty">No messages sent on this date.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = records.map(r => {
+      const status = r['Status'] || '';
+      const cta_val = String(r['CTA Clicked']||'').toLowerCase();
+      const statusBadge = status === 'Sent'
+        ? '<span class="badge sent">Sent</span>'
+        : status === 'Failed'
+          ? '<span class="badge failed">Failed</span>'
+          : `<span class="badge">${status}</span>`;
+      const ctaBadge = cta_val === 'yes'
+        ? '<span class="badge yes">Yes</span>'
+        : '<span class="badge no">No</span>';
+      return `<tr>
+        <td>${r['Guest Name']||''}</td>
+        <td>${r['Phone']||''}</td>
+        <td>${r['Check-in Date']||''}</td>
+        <td>${r['Confirmation ID']||''}</td>
+        <td>${statusBadge}</td>
+        <td class="response-cell">${r['Response']||'—'}</td>
+        <td>${ctaBadge}</td>
+        <td>${r['Action Taken']||'—'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderBarChart() {
+    const allDates = Object.keys(ALL_DATA).sort().slice(-14);
+    const counts   = allDates.map(d => (ALL_DATA[d]||[]).length);
+
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: {
+        labels: allDates.map(d => d.slice(5)),
+        datasets: [{ label: 'Messages Sent', data: counts,
+          backgroundColor: '#1a3c34', borderRadius: 4 }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1 } },
+          x: { ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  document.getElementById('datePicker').addEventListener('change', e => {
+    renderDashboard(e.target.value);
+  });
+
+  if (latestDate) {
+    renderDashboard(latestDate);
+    renderBarChart();
+  }
+</script>
 </body>
 </html>
