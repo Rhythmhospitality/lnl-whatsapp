@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rhythm Lonavala — WhatsApp Outreach</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -19,26 +19,36 @@
   .charts{display:flex;gap:16px;padding:18px 32px;flex-wrap:wrap}
   .chart-box{background:#fff;border-radius:10px;padding:18px;flex:1;min-width:280px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
   .chart-box h3{font-size:13px;color:#555;margin-bottom:12px;font-weight:500}
-  .table-wrap{padding:0 32px 32px;overflow-x:auto}
+  .tabs{display:flex;gap:0;padding:18px 32px 0;border-bottom:none}
+  .tab-btn{padding:10px 24px;border:2px solid #1a3c34;background:#fff;color:#1a3c34;font-size:13px;font-weight:600;cursor:pointer;border-right:none;transition:all .15s}
+  .tab-btn:first-child{border-radius:8px 0 0 8px}
+  .tab-btn:last-child{border-right:2px solid #1a3c34;border-radius:0 8px 8px 0}
+  .tab-btn.active{background:#1a3c34;color:#fff}
+  .tab-count{display:inline-block;background:rgba(255,255,255,.25);border-radius:12px;padding:1px 7px;font-size:11px;margin-left:6px}
+  .tab-btn:not(.active) .tab-count{background:#1a3c34;color:#fff}
+  .table-wrap{padding:12px 32px 32px;overflow-x:auto}
   table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
   th{background:#1a3c34;color:#fff;text-align:left;padding:11px 14px;font-size:12px;font-weight:500}
-  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#fafafa}
   .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
   .badge.sent{background:#d4edda;color:#155724}
   .badge.failed{background:#f8d7da;color:#721c24}
-  .response-cell{color:#555;font-style:italic;max-width:240px}
+  .response-cell{color:#444;max-width:260px;font-style:italic}
+  .done-btn{background:#1a3c34;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+  .done-btn:hover{background:#145c46}
+  .done-btn:disabled{background:#aaa;cursor:default}
   .empty{text-align:center;padding:60px;color:#aaa;font-size:14px}
   .last-updated{text-align:right;font-size:11px;color:#aaa;padding:8px 32px 0}
-  .section-title{padding:18px 32px 6px;font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px}
+  .needs-action-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:6px;vertical-align:middle}
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
-    <p>48-hour pre-arrival messages sent to upcoming guests</p>
+    <p>48-hour pre-arrival messages · Guest responses</p>
   </div>
   <select class="date-select" id="datePicker"><option>No data yet</option></select>
 </header>
@@ -63,20 +73,15 @@
   </div>
 </div>
 
-<div class="section-title">Message Log</div>
+<div class="tabs" style="padding:18px 32px 0">
+  <button class="tab-btn active" onclick="switchTab('all',this)">All <span class="tab-count" id="cnt-all">0</span></button>
+  <button class="tab-btn" onclick="switchTab('action',this)"><span class="needs-action-dot"></span>Needs Action <span class="tab-count" id="cnt-action">0</span></button>
+  <button class="tab-btn" onclick="switchTab('done',this)">Done <span class="tab-count" id="cnt-done">0</span></button>
+</div>
+
 <div class="table-wrap">
   <table>
-    <thead>
-      <tr>
-        <th>Guest Name</th>
-        <th>Phone</th>
-        <th>Check-in Date</th>
-        <th>Confirmation ID</th>
-        <th>Email</th>
-        <th>Status</th>
-        <th>Guest Response</th>
-      </tr>
-    </thead>
+    <thead id="tableHead"></thead>
     <tbody id="tableBody">
       <tr><td colspan="7" class="empty">Select a date above</td></tr>
     </tbody>
@@ -84,76 +89,124 @@
 </div>
 
 <script>
-  document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
+  document.getElementById('ts').textContent = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 
   const ALL_DATA = {};
+  const APPS_URL = "";
   const latestDate = "";
+  let currentTab = 'all';
+  let currentRecords = [];
   let donutChart = null, barChart = null;
 
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable(currentRecords);
+  }
+
   function renderDashboard(date) {
-    const records = ALL_DATA[date] || [];
-    const sent    = records.length;
-    const replied = records.filter(r => String(r['Response']||'').trim()).length;
-    const failed  = records.filter(r => String(r['Status']||'').toLowerCase() === 'failed').length;
-    const noReply = sent - replied - failed;
+    currentRecords = ALL_DATA[date] || [];
+    const sent    = currentRecords.length;
+    const replied = currentRecords.filter(r => String(r['Response']||'').trim()).length;
+    const failed  = currentRecords.filter(r => String(r['Status']||'').toLowerCase()==='failed').length;
+    const noReply = Math.max(0, sent - replied - failed);
+    const needsAction = currentRecords.filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes').length;
+    const done    = currentRecords.filter(r => String(r['Done']||'').toLowerCase()==='yes').length;
 
     document.getElementById('k-sent').textContent    = sent;
     document.getElementById('k-replied').textContent = replied;
-    document.getElementById('k-no-reply').textContent = Math.max(0, noReply);
+    document.getElementById('k-no-reply').textContent = noReply;
     document.getElementById('k-failed').textContent  = failed;
+    document.getElementById('cnt-all').textContent    = sent;
+    document.getElementById('cnt-action').textContent = needsAction;
+    document.getElementById('cnt-done').textContent   = done;
 
     if (donutChart) donutChart.destroy();
-    donutChart = new Chart(document.getElementById('donutChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Replied', 'No Response', 'Failed'],
-        datasets: [{ data: [replied, Math.max(0,noReply), failed],
-          backgroundColor: ['#22c55e','#e5e7eb','#f87171'], borderWidth: 0 }]
-      },
-      options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11} } } }, cutout:'65%' }
+    donutChart = new Chart(document.getElementById('donutChart'),{
+      type:'doughnut',
+      data:{labels:['Replied','No Response','Failed'],datasets:[{data:[replied,noReply,failed],backgroundColor:['#22c55e','#e5e7eb','#f87171'],borderWidth:0}]},
+      options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},cutout:'65%'}
     });
 
+    renderTable(currentRecords);
+  }
+
+  function renderTable(records) {
+    let filtered;
+    if (currentTab === 'action') {
+      filtered = records.filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes');
+    } else if (currentTab === 'done') {
+      filtered = records.filter(r => String(r['Done']||'').toLowerCase()==='yes');
+    } else {
+      filtered = records;
+    }
+
+    const showDoneBtn = currentTab === 'action';
+    const thead = document.getElementById('tableHead');
     const tbody = document.getElementById('tableBody');
-    if (!records.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty">No messages sent on this date.</td></tr>';
+
+    thead.innerHTML = '<tr>' +
+      '<th>Guest Name</th><th>Phone</th><th>Check-in Date</th><th>Confirmation ID</th><th>Status</th><th>Guest Response</th>' +
+      (showDoneBtn ? '<th>Mark Done</th>' : '') +
+      '</tr>';
+
+    if (!filtered.length) {
+      const msg = currentTab==='action' ? 'No pending replies — all clear!' : currentTab==='done' ? 'No completed responses yet.' : 'No messages sent on this date.';
+      tbody.innerHTML = `<tr><td colspan="${showDoneBtn?7:6}" class="empty">${msg}</td></tr>`;
       return;
     }
-    tbody.innerHTML = records.map(r => {
+
+    tbody.innerHTML = filtered.map((r,i) => {
       const status = String(r['Status']||'');
-      const badge = status.toLowerCase() === 'failed'
-        ? '<span class="badge failed">Failed</span>'
-        : '<span class="badge sent">Sent</span>';
+      const badge  = status.toLowerCase()==='failed' ? '<span class="badge failed">Failed</span>' : '<span class="badge sent">Sent</span>';
+      const doneCol = showDoneBtn
+        ? `<td><button class="done-btn" onclick="markDone(this,'${String(r['Date Sent']||'').slice(0,10)}','${r['Phone']}')">✓ Done</button></td>`
+        : '';
       return `<tr>
         <td>${r['Guest Name']||''}</td>
         <td>${r['Phone']||''}</td>
         <td>${r['Check-in Date']||''}</td>
         <td>${r['Confirmation ID']||''}</td>
-        <td>${r['Email']||''}</td>
         <td>${badge}</td>
         <td class="response-cell">${r['Response']||'—'}</td>
+        ${doneCol}
       </tr>`;
     }).join('');
   }
 
+  function markDone(btn, date, phone) {
+    if (!APPS_URL) { alert('Apps Script URL not configured yet.'); return; }
+    btn.disabled = true;
+    btn.textContent = '...';
+    fetch(APPS_URL, {
+      method: 'POST',
+      body: JSON.stringify({date: date, phone: String(phone)}),
+      headers: {'Content-Type':'application/json'}
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'ok') {
+        btn.textContent = '✓ Done';
+        btn.closest('tr').style.opacity = '.4';
+        setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 800);
+      } else { btn.disabled=false; btn.textContent='✓ Done'; alert('Error saving. Try again.'); }
+    })
+    .catch(() => { btn.disabled=false; btn.textContent='✓ Done'; alert('Could not reach server. Try again.'); });
+  }
+
   function renderBarChart() {
     const allDates = Object.keys(ALL_DATA).sort().slice(-14);
-    const counts   = allDates.map(d => (ALL_DATA[d]||[]).length);
+    const counts   = allDates.map(d=>(ALL_DATA[d]||[]).length);
     if (barChart) barChart.destroy();
-    barChart = new Chart(document.getElementById('barChart'), {
-      type: 'bar',
-      data: {
-        labels: allDates.map(d => d.slice(5)),
-        datasets: [{ label: 'Messages Sent', data: counts, backgroundColor: '#1a3c34', borderRadius: 4 }]
-      },
-      options: {
-        plugins: { legend: { display:false } },
-        scales: { y: { beginAtZero:true, ticks:{ stepSize:1 } }, x:{ ticks:{ font:{size:11} } } }
-      }
+    barChart = new Chart(document.getElementById('barChart'),{
+      type:'bar',
+      data:{labels:allDates.map(d=>d.slice(5)),datasets:[{label:'Messages Sent',data:counts,backgroundColor:'#1a3c34',borderRadius:4}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{font:{size:11}}}}}
     });
   }
 
   document.getElementById('datePicker').addEventListener('change', e => renderDashboard(e.target.value));
-
   if (latestDate) { renderDashboard(latestDate); renderBarChart(); }
 </script>
 </body>
