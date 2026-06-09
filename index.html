@@ -44,7 +44,7 @@
     <p>48-hour pre-arrival messages · Guest responses · Actions taken</p>
   </div>
   <select class="date-select" id="datePicker">
-    <option>No data yet</option>
+    <option value="2026-06-09">2026-06-09</option>
   </select>
 </header>
 
@@ -93,8 +93,8 @@
 <script>
   document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
 
-  const ALL_DATA = {};
-  const latestDate = "";
+  const ALL_DATA = {"2026-06-09": [{"Date Sent": "2026-06-09", "Guest Name": "Rahul Mehta", "Phone": 919004063632, "Check-in Date": "2026-06-11", "Confirmation ID": "RES-2026-001", "Email": "rahul@gmail.com", "Status": "Sent", "Response": "We would love a candle-light dinner setup!", "CTA Clicked": "No", "Action Taken": "Arranged candle-light dinner for 11th evening"}, {"Date Sent": "2026-06-09", "Guest Name": "Priya Sharma", "Phone": 919136715183, "Check-in Date": "2026-06-11", "Confirmation ID": "RES-2026-002", "Email": "priya@gmail.com", "Status": "Sent", "Response": "", "CTA Clicked": "Yes", "Action Taken": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Amit Desai", "Phone": 919876543210, "Check-in Date": "2026-06-12", "Confirmation ID": "RES-2026-003", "Email": "amit@outlook.com", "Status": "Sent", "Response": "Can we get an early check-in at 10 AM?", "CTA Clicked": "No", "Action Taken": "Noted early check-in request, informed housekeeping"}, {"Date Sent": "2026-06-09", "Guest Name": "Sneha Kapoor", "Phone": 918765432109, "Check-in Date": "2026-06-12", "Confirmation ID": "RES-2026-004", "Email": "", "Status": "Sent", "Response": "", "CTA Clicked": "No", "Action Taken": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Vikram Nair", "Phone": 917654321098, "Check-in Date": "2026-06-13", "Confirmation ID": "RES-2026-005", "Email": "vikram@yahoo.com", "Status": "Failed", "Response": "", "CTA Clicked": "No", "Action Taken": ""}]};
+  const latestDate = "2026-06-09";
 
   let donutChart = null;
   let barChart = null;
