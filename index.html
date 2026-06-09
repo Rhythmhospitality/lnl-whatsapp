@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rhythm Lonavala — WhatsApp Outreach Dashboard</title>
+<title>Rhythm Lonavala — WhatsApp Outreach</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -13,7 +13,7 @@
   header p{font-size:12px;opacity:.7;margin-top:3px}
   .date-select{background:#fff;color:#1a3c34;border:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
   .kpis{display:flex;gap:14px;padding:22px 32px 0;flex-wrap:wrap}
-  .kpi{background:#fff;border-radius:10px;padding:16px 22px;flex:1;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .kpi{background:#fff;border-radius:10px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
   .kpi .num{font-size:32px;font-weight:700;color:#1a3c34}
   .kpi .lbl{font-size:12px;color:#888;margin-top:3px}
   .charts{display:flex;gap:16px;padding:18px 32px;flex-wrap:wrap}
@@ -28,24 +28,19 @@
   .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
   .badge.sent{background:#d4edda;color:#155724}
   .badge.failed{background:#f8d7da;color:#721c24}
-  .badge.yes{background:#cce5ff;color:#004085}
-  .badge.no{background:#f0f0f0;color:#666}
-  .response-cell{color:#555;font-style:italic;max-width:200px}
-  .empty{text-align:center;padding:60px;color:#aaa;font-size:15px}
-  .last-updated{text-align:right;font-size:11px;color:#aaa;padding:6px 32px 0}
-  .section-title{padding:18px 32px 4px;font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px}
+  .response-cell{color:#555;font-style:italic;max-width:240px}
+  .empty{text-align:center;padding:60px;color:#aaa;font-size:14px}
+  .last-updated{text-align:right;font-size:11px;color:#aaa;padding:8px 32px 0}
+  .section-title{padding:18px 32px 6px;font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
 <body>
-
 <header>
   <div>
     <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
-    <p>48-hour pre-arrival messages · Guest responses · Actions taken</p>
+    <p>48-hour pre-arrival messages sent to upcoming guests</p>
   </div>
-  <select class="date-select" id="datePicker">
-    <option value="2026-06-09">2026-06-09</option>
-  </select>
+  <select class="date-select" id="datePicker"><option>No data yet</option></select>
 </header>
 
 <div class="last-updated">Last updated: <span id="ts"></span></div>
@@ -53,19 +48,18 @@
 <div class="kpis">
   <div class="kpi"><div class="num" id="k-sent">0</div><div class="lbl">Messages Sent</div></div>
   <div class="kpi"><div class="num" id="k-replied">0</div><div class="lbl">Responses Received</div></div>
-  <div class="kpi"><div class="num" id="k-cta">0</div><div class="lbl">Called Us (CTA)</div></div>
-  <div class="kpi"><div class="num" id="k-actioned">0</div><div class="lbl">Actions Taken</div></div>
   <div class="kpi"><div class="num" id="k-no-reply">0</div><div class="lbl">No Response</div></div>
+  <div class="kpi"><div class="num" id="k-failed">0</div><div class="lbl">Failed to Send</div></div>
 </div>
 
 <div class="charts">
-  <div class="chart-box" style="max-width:320px">
-    <h3>Response Breakdown</h3>
-    <canvas id="donutChart" height="180"></canvas>
+  <div class="chart-box" style="max-width:300px">
+    <h3>Response Rate</h3>
+    <canvas id="donutChart" height="190"></canvas>
   </div>
   <div class="chart-box">
     <h3>Messages Sent by Date (last 14 days)</h3>
-    <canvas id="barChart" height="180"></canvas>
+    <canvas id="barChart" height="190"></canvas>
   </div>
 </div>
 
@@ -78,14 +72,13 @@
         <th>Phone</th>
         <th>Check-in Date</th>
         <th>Confirmation ID</th>
+        <th>Email</th>
         <th>Status</th>
         <th>Guest Response</th>
-        <th>Called Us</th>
-        <th>Action Taken</th>
       </tr>
     </thead>
     <tbody id="tableBody">
-      <tr><td colspan="8" class="empty">Select a date above</td></tr>
+      <tr><td colspan="7" class="empty">Select a date above</td></tr>
     </tbody>
   </table>
 </div>
@@ -93,66 +86,51 @@
 <script>
   document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});
 
-  const ALL_DATA = {"2026-06-09": [{"Date Sent": "2026-06-09", "Guest Name": "Rahul Mehta", "Phone": 919004063632, "Check-in Date": "2026-06-11", "Confirmation ID": "RES-2026-001", "Email": "rahul@gmail.com", "Status": "Sent", "Response": "We would love a candle-light dinner setup!", "CTA Clicked": "No", "Action Taken": "Arranged candle-light dinner for 11th evening"}, {"Date Sent": "2026-06-09", "Guest Name": "Priya Sharma", "Phone": 919136715183, "Check-in Date": "2026-06-11", "Confirmation ID": "RES-2026-002", "Email": "priya@gmail.com", "Status": "Sent", "Response": "", "CTA Clicked": "Yes", "Action Taken": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Amit Desai", "Phone": 919876543210, "Check-in Date": "2026-06-12", "Confirmation ID": "RES-2026-003", "Email": "amit@outlook.com", "Status": "Sent", "Response": "Can we get an early check-in at 10 AM?", "CTA Clicked": "No", "Action Taken": "Noted early check-in request, informed housekeeping"}, {"Date Sent": "2026-06-09", "Guest Name": "Sneha Kapoor", "Phone": 918765432109, "Check-in Date": "2026-06-12", "Confirmation ID": "RES-2026-004", "Email": "", "Status": "Sent", "Response": "", "CTA Clicked": "No", "Action Taken": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Vikram Nair", "Phone": 917654321098, "Check-in Date": "2026-06-13", "Confirmation ID": "RES-2026-005", "Email": "vikram@yahoo.com", "Status": "Failed", "Response": "", "CTA Clicked": "No", "Action Taken": ""}]};
-  const latestDate = "2026-06-09";
-
-  let donutChart = null;
-  let barChart = null;
+  const ALL_DATA = {};
+  const latestDate = "";
+  let donutChart = null, barChart = null;
 
   function renderDashboard(date) {
     const records = ALL_DATA[date] || [];
+    const sent    = records.length;
+    const replied = records.filter(r => String(r['Response']||'').trim()).length;
+    const failed  = records.filter(r => String(r['Status']||'').toLowerCase() === 'failed').length;
+    const noReply = sent - replied - failed;
 
-    const sent     = records.length;
-    const replied  = records.filter(r => String(r['Response']||'').trim()).length;
-    const cta      = records.filter(r => String(r['CTA Clicked']||'').toLowerCase() === 'yes').length;
-    const actioned = records.filter(r => String(r['Action Taken']||'').trim()).length;
-    const noReply  = sent - replied;
+    document.getElementById('k-sent').textContent    = sent;
+    document.getElementById('k-replied').textContent = replied;
+    document.getElementById('k-no-reply').textContent = Math.max(0, noReply);
+    document.getElementById('k-failed').textContent  = failed;
 
-    document.getElementById('k-sent').textContent     = sent;
-    document.getElementById('k-replied').textContent  = replied;
-    document.getElementById('k-cta').textContent      = cta;
-    document.getElementById('k-actioned').textContent = actioned;
-    document.getElementById('k-no-reply').textContent = noReply;
-
-    // Donut chart
     if (donutChart) donutChart.destroy();
     donutChart = new Chart(document.getElementById('donutChart'), {
       type: 'doughnut',
       data: {
-        labels: ['Replied', 'Called CTA', 'No Response'],
-        datasets: [{ data: [replied, cta, noReply],
-          backgroundColor: ['#22c55e','#3b82f6','#e5e7eb'],
-          borderWidth: 0 }]
+        labels: ['Replied', 'No Response', 'Failed'],
+        datasets: [{ data: [replied, Math.max(0,noReply), failed],
+          backgroundColor: ['#22c55e','#e5e7eb','#f87171'], borderWidth: 0 }]
       },
-      options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, cutout: '65%' }
+      options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11} } } }, cutout:'65%' }
     });
 
-    // Table
     const tbody = document.getElementById('tableBody');
     if (!records.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty">No messages sent on this date.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty">No messages sent on this date.</td></tr>';
       return;
     }
     tbody.innerHTML = records.map(r => {
-      const status = r['Status'] || '';
-      const cta_val = String(r['CTA Clicked']||'').toLowerCase();
-      const statusBadge = status === 'Sent'
-        ? '<span class="badge sent">Sent</span>'
-        : status === 'Failed'
-          ? '<span class="badge failed">Failed</span>'
-          : `<span class="badge">${status}</span>`;
-      const ctaBadge = cta_val === 'yes'
-        ? '<span class="badge yes">Yes</span>'
-        : '<span class="badge no">No</span>';
+      const status = String(r['Status']||'');
+      const badge = status.toLowerCase() === 'failed'
+        ? '<span class="badge failed">Failed</span>'
+        : '<span class="badge sent">Sent</span>';
       return `<tr>
         <td>${r['Guest Name']||''}</td>
         <td>${r['Phone']||''}</td>
         <td>${r['Check-in Date']||''}</td>
         <td>${r['Confirmation ID']||''}</td>
-        <td>${statusBadge}</td>
+        <td>${r['Email']||''}</td>
+        <td>${badge}</td>
         <td class="response-cell">${r['Response']||'—'}</td>
-        <td>${ctaBadge}</td>
-        <td>${r['Action Taken']||'—'}</td>
       </tr>`;
     }).join('');
   }
@@ -160,33 +138,23 @@
   function renderBarChart() {
     const allDates = Object.keys(ALL_DATA).sort().slice(-14);
     const counts   = allDates.map(d => (ALL_DATA[d]||[]).length);
-
     if (barChart) barChart.destroy();
     barChart = new Chart(document.getElementById('barChart'), {
       type: 'bar',
       data: {
         labels: allDates.map(d => d.slice(5)),
-        datasets: [{ label: 'Messages Sent', data: counts,
-          backgroundColor: '#1a3c34', borderRadius: 4 }]
+        datasets: [{ label: 'Messages Sent', data: counts, backgroundColor: '#1a3c34', borderRadius: 4 }]
       },
       options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-          x: { ticks: { font: { size: 11 } } }
-        }
+        plugins: { legend: { display:false } },
+        scales: { y: { beginAtZero:true, ticks:{ stepSize:1 } }, x:{ ticks:{ font:{size:11} } } }
       }
     });
   }
 
-  document.getElementById('datePicker').addEventListener('change', e => {
-    renderDashboard(e.target.value);
-  });
+  document.getElementById('datePicker').addEventListener('change', e => renderDashboard(e.target.value));
 
-  if (latestDate) {
-    renderDashboard(latestDate);
-    renderBarChart();
-  }
+  if (latestDate) { renderDashboard(latestDate); renderBarChart(); }
 </script>
 </body>
 </html>
