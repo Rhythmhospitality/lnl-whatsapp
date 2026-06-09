@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rhythm Lonavala — WhatsApp Pre-Arrival Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #333; }
+  header { background: #1a3c34; color: white; padding: 20px 32px; }
+  header h1 { font-size: 22px; font-weight: 600; }
+  header p { font-size: 13px; opacity: 0.75; margin-top: 4px; }
+  .stats { display: flex; gap: 16px; padding: 24px 32px; flex-wrap: wrap; }
+  .stat { background: white; border-radius: 10px; padding: 20px 28px; flex: 1;
+           min-width: 160px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .stat .num { font-size: 36px; font-weight: 700; color: #1a3c34; }
+  .stat .label { font-size: 13px; color: #888; margin-top: 4px; }
+  .table-wrap { padding: 0 32px 32px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: white;
+           border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  th { background: #1a3c34; color: white; text-align: left; padding: 12px 16px;
+        font-size: 13px; font-weight: 500; }
+  td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600; }
+  .badge.sent { background: #d4edda; color: #155724; }
+  .badge.failed { background: #f8d7da; color: #721c24; }
+  .response-cell { color: #555; font-style: italic; max-width: 220px; }
+  .empty { text-align: center; padding: 48px; color: #aaa; font-size: 15px; }
+  .last-updated { text-align: right; font-size: 11px; color: #aaa; padding: 8px 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
+  <p>48-hour pre-arrival messages sent to upcoming guests</p>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="num">0</div><div class="label">Messages Sent</div></div>
+  <div class="stat"><div class="num">0</div><div class="label">Responses Received</div></div>
+  <div class="stat"><div class="num">0</div><div class="label">Actions Taken</div></div>
+  <div class="stat"><div class="num">0</div><div class="label">No Response</div></div>
+</div>
+
+<div class="last-updated">Last updated: <span id="ts"></span></div>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'});</script>
+
+<div class="table-wrap">
+<div class="empty">No messages sent yet.</div>
+</div>
+</body>
+</html>
