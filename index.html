@@ -91,7 +91,7 @@
 <script>
   document.getElementById('ts').textContent = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 
-  const ALL_DATA = {"2026-06-09": [{"Date Sent": "2026-06-09", "Guest Name": "Yash", "Phone": 919136715183, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-001", "Email": "", "Status": "Sent", "Response": "hii seeing if test works", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Ashish Jatia", "Phone": 919004063632, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-003-just-testing-this-feature", "Email": "ashish.jatia@rhythmhospitality.com", "Status": "Sent", "Response": "Hi I want a bday cake", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Nasir Khan", "Phone": 919607720099, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-004-just-testing-this-feature", "Email": "nasir.khan@rhythmhospitality.com", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Vaibhav Jatia", "Phone": 919967716522, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-005-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Heer Patel", "Phone": 917506732934, "Check-in Date": "2026-06-09", "Confirmation ID": "TEST-006-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Heer Patel", "Phone": 917506732934, "Check-in Date": "2026-06-09", "Confirmation ID": "TEST-006-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "", "Done": ""}]};
+  const ALL_DATA = {"2026-06-09": [{"Date Sent": "2026-06-09", "Guest Name": "Yash", "Phone": 919136715183, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-001", "Email": "", "Status": "Sent", "Response": "hii seeing if test works", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Ashish Jatia", "Phone": 919004063632, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-003-just-testing-this-feature", "Email": "ashish.jatia@rhythmhospitality.com", "Status": "Sent", "Response": "Hi I want a bday cake", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Nasir Khan", "Phone": 919607720099, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-004-just-testing-this-feature", "Email": "nasir.khan@rhythmhospitality.com", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Vaibhav Jatia", "Phone": 919967716522, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-005-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Heer Patel", "Phone": 917506732934, "Check-in Date": "2026-06-09", "Confirmation ID": "TEST-006-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "Testing", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Heer Patel", "Phone": 917506732934, "Check-in Date": "2026-06-09", "Confirmation ID": "TEST-006-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "Testing", "Done": ""}]};
   const APPS_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
   const latestDate = "2026-06-09";
   let currentTab = 'all';
@@ -181,16 +181,14 @@
     btn.textContent = '...';
     fetch(APPS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify({date: date, phone: String(phone)}),
-      headers: {'Content-Type':'application/json'}
+      headers: {'Content-Type':'text/plain'}
     })
-    .then(r => r.json())
-    .then(d => {
-      if (d.status === 'ok') {
-        btn.textContent = '✓ Done';
-        btn.closest('tr').style.opacity = '.4';
-        setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 800);
-      } else { btn.disabled=false; btn.textContent='✓ Done'; alert('Error saving. Try again.'); }
+    .then(() => {
+      btn.textContent = '✓ Done';
+      btn.closest('tr').style.opacity = '.4';
+      setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 1000);
     })
     .catch(() => { btn.disabled=false; btn.textContent='✓ Done'; alert('Could not reach server. Try again.'); });
   }
