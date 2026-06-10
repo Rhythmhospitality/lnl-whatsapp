@@ -5,13 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Rhythm Lonavala — WhatsApp Outreach</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#222}
   header{background:#1a3c34;color:#fff;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
   header h1{font-size:20px;font-weight:600}
   header p{font-size:12px;opacity:.7;margin-top:3px}
-  .date-select{background:#fff;color:#1a3c34;border:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  .cal-wrap{position:relative;display:flex;align-items:center;gap:8px}
+  .cal-wrap .cal-icon{font-size:18px;cursor:pointer}
+  #datePicker{background:#fff;color:#1a3c34;border:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:140px}
   .kpis{display:flex;gap:14px;padding:22px 32px 0;flex-wrap:wrap}
   .kpi{background:#fff;border-radius:10px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
   .kpi .num{font-size:32px;font-weight:700;color:#1a3c34}
@@ -42,15 +46,22 @@
   .empty{text-align:center;padding:60px;color:#aaa;font-size:14px}
   .last-updated{text-align:right;font-size:11px;color:#aaa;padding:8px 32px 0}
   .needs-action-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:6px;vertical-align:middle}
+  /* Flatpickr theme overrides */
+  .flatpickr-day.has-data{background:#d4edda !important;color:#155724 !important;font-weight:700}
+  .flatpickr-day.has-data:hover{background:#aad4b8 !important}
+  .flatpickr-day.selected{background:#1a3c34 !important;border-color:#1a3c34 !important;color:#fff !important}
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
-    <p>48-hour pre-arrival messages · Guest responses</p>
+    <p>72-hour pre-arrival messages · Guest responses</p>
   </div>
-  <select class="date-select" id="datePicker"><option value="2026-06-10">2026-06-10</option><option value="2026-06-09">2026-06-09</option></select>
+  <div class="cal-wrap">
+    <span class="cal-icon" onclick="fp.open()">📅</span>
+    <input type="text" id="datePicker" placeholder="Pick a date" readonly>
+  </div>
 </header>
 
 <div class="last-updated">Last updated: <span id="ts"></span></div>
@@ -110,17 +121,11 @@
       .then(r => r.json())
       .then(data => {
         ALL_DATA = data;
-        // Rebuild date picker
         const dates = Object.keys(data).sort().reverse();
-        const picker = document.getElementById('datePicker');
-        const prev = picker.value || currentDate;
-        picker.innerHTML = dates.length
-          ? dates.map(d => `<option value="${d}">${d}</option>`).join('')
-          : '<option>No data yet</option>';
-        // Restore selected date or use latest
-        if (prev && data[prev]) picker.value = prev;
-        currentDate = picker.value;
-        if (callback) callback(currentDate);
+        const latest = dates[0] || currentDate;
+        if (!currentDate && latest) currentDate = latest;
+        if (typeof fp !== 'undefined' && fp.redraw) fp.redraw();
+        if (callback) callback(currentDate || latest);
         renderBarChart();
       })
       .catch(e => { console.error('Data load failed', e); if (callback) callback(currentDate); });
@@ -220,10 +225,32 @@
     });
   }
 
-  document.getElementById('datePicker').addEventListener('change', e => renderDashboard(e.target.value));
+  // Initialise Flatpickr calendar
+  var fp = flatpickr('#datePicker', {
+    dateFormat: 'Y-m-d',
+    disableMobile: true,
+    onDayCreate: function(dObj, dStr, fp, dayElem) {
+      // Highlight dates that have data
+      var d = dayElem.dateObj;
+      var key = d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0');
+      if (ALL_DATA[key]) dayElem.classList.add('has-data');
+    },
+    onChange: function(selectedDates, dateStr) {
+      if (dateStr && ALL_DATA[dateStr]) renderDashboard(dateStr);
+    }
+  });
 
   // Load live data on page open
-  loadData(function(date) { if (date) renderDashboard(date); });
+  loadData(function(date) {
+    if (date) {
+      fp.setDate(date, false);
+      renderDashboard(date);
+      // Re-render calendar to highlight data dates
+      fp.redraw && fp.redraw();
+    }
+  });
 </script>
 </body>
 </html>
