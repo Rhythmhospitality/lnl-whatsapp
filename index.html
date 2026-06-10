@@ -179,18 +179,15 @@
     if (!APPS_URL) { alert('Apps Script URL not configured yet.'); return; }
     btn.disabled = true;
     btn.textContent = '...';
-    fetch(APPS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({date: date, phone: String(phone)}),
-      headers: {'Content-Type':'text/plain'}
-    })
-    .then(() => {
+    // Use Image trick — completely CORS-free, works from any browser
+    var url = APPS_URL + '?action=done&date=' + encodeURIComponent(date) + '&phone=' + encodeURIComponent(String(phone));
+    var img = new Image();
+    img.onload = img.onerror = function() {
       btn.textContent = '✓ Done';
       btn.closest('tr').style.opacity = '.4';
-      setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 1000);
-    })
-    .catch(() => { btn.disabled=false; btn.textContent='✓ Done'; alert('Could not reach server. Try again.'); });
+      setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 800);
+    };
+    img.src = url;
   }
 
   function renderBarChart() {
