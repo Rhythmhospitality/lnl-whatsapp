@@ -91,11 +91,11 @@
 <script>
   document.getElementById('ts').textContent = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
 
-  const ALL_DATA = {"2026-06-09": [{"Date Sent": "2026-06-09", "Guest Name": "Yash", "Phone": 919136715183, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-001", "Email": "", "Status": "Sent", "Response": "hii seeing if test works", "Done": "Yes"}, {"Date Sent": "2026-06-09", "Guest Name": "Ashish Jatia", "Phone": 919004063632, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-003-just-testing-this-feature", "Email": "ashish.jatia@rhythmhospitality.com", "Status": "Sent", "Response": "Hi I want a bday cake", "Done": "Yes"}, {"Date Sent": "2026-06-09", "Guest Name": "Nasir Khan", "Phone": 919607720099, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-004-just-testing-this-feature", "Email": "nasir.khan@rhythmhospitality.com", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Vaibhav Jatia", "Phone": 919967716522, "Check-in Date": "2026-06-11", "Confirmation ID": "TEST-005-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "", "Done": ""}, {"Date Sent": "2026-06-09", "Guest Name": "Heer Patel", "Phone": 917506732934, "Check-in Date": "2026-06-09", "Confirmation ID": "TEST-006-just-testing-this-feature", "Email": "", "Status": "Sent", "Response": "Testing", "Done": "Yes"}]};
   const APPS_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
-  const latestDate = "2026-06-09";
+  let ALL_DATA = {};
   let currentTab = 'all';
   let currentRecords = [];
+  let currentDate = '';
   let donutChart = null, barChart = null;
 
   function switchTab(tab, btn) {
@@ -105,7 +105,29 @@
     renderTable(currentRecords);
   }
 
+  function loadData(callback) {
+    fetch(APPS_URL + '?action=data')
+      .then(r => r.json())
+      .then(data => {
+        ALL_DATA = data;
+        // Rebuild date picker
+        const dates = Object.keys(data).sort().reverse();
+        const picker = document.getElementById('datePicker');
+        const prev = picker.value || currentDate;
+        picker.innerHTML = dates.length
+          ? dates.map(d => `<option value="${d}">${d}</option>`).join('')
+          : '<option>No data yet</option>';
+        // Restore selected date or use latest
+        if (prev && data[prev]) picker.value = prev;
+        currentDate = picker.value;
+        if (callback) callback(currentDate);
+        renderBarChart();
+      })
+      .catch(e => { console.error('Data load failed', e); if (callback) callback(currentDate); });
+  }
+
   function renderDashboard(date) {
+    currentDate = date;
     currentRecords = ALL_DATA[date] || [];
     const sent    = currentRecords.length;
     const replied = currentRecords.filter(r => String(r['Response']||'').trim()).length;
@@ -114,10 +136,10 @@
     const needsAction = currentRecords.filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes').length;
     const done    = currentRecords.filter(r => String(r['Done']||'').toLowerCase()==='yes').length;
 
-    document.getElementById('k-sent').textContent    = sent;
-    document.getElementById('k-replied').textContent = replied;
+    document.getElementById('k-sent').textContent     = sent;
+    document.getElementById('k-replied').textContent  = replied;
     document.getElementById('k-no-reply').textContent = noReply;
-    document.getElementById('k-failed').textContent  = failed;
+    document.getElementById('k-failed').textContent   = failed;
     document.getElementById('cnt-all').textContent    = sent;
     document.getElementById('cnt-action').textContent = needsAction;
     document.getElementById('cnt-done').textContent   = done;
@@ -157,7 +179,7 @@
       return;
     }
 
-    tbody.innerHTML = filtered.map((r,i) => {
+    tbody.innerHTML = filtered.map(r => {
       const status = String(r['Status']||'');
       const badge  = status.toLowerCase()==='failed' ? '<span class="badge failed">Failed</span>' : '<span class="badge sent">Sent</span>';
       const doneCol = showDoneBtn
@@ -179,15 +201,12 @@
     if (!APPS_URL) { alert('Apps Script URL not configured yet.'); return; }
     btn.disabled = true;
     btn.textContent = '...';
-    // Use Image trick — completely CORS-free, works from any browser
-    var url = APPS_URL + '?action=done&date=' + encodeURIComponent(date) + '&phone=' + encodeURIComponent(String(phone));
     var img = new Image();
     img.onload = img.onerror = function() {
-      btn.textContent = '✓ Done';
-      btn.closest('tr').style.opacity = '.4';
-      setTimeout(() => { renderDashboard(document.getElementById('datePicker').value); }, 800);
+      // Reload live data from sheet, then re-render
+      loadData(function(d) { renderDashboard(d); });
     };
-    img.src = url;
+    img.src = APPS_URL + '?action=done&date=' + encodeURIComponent(date) + '&phone=' + encodeURIComponent(String(phone));
   }
 
   function renderBarChart() {
@@ -202,7 +221,9 @@
   }
 
   document.getElementById('datePicker').addEventListener('change', e => renderDashboard(e.target.value));
-  if (latestDate) { renderDashboard(latestDate); renderBarChart(); }
+
+  // Load live data on page open
+  loadData(function(date) { if (date) renderDashboard(date); });
 </script>
 </body>
 </html>
