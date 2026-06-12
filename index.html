@@ -45,6 +45,9 @@
   .done-btn:disabled{background:#aaa;cursor:default}
   .chat-btn{background:#f0f9f4;color:#1a3c34;border:1px solid #1a3c34;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
   .chat-btn:hover{background:#d4edda}
+  .chat-btn.unread{background:#fff3cd;color:#856404;border-color:#f97316;animation:pulse 1.5s infinite}
+  .chat-btn.unread:hover{background:#ffe69c}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)}50%{box-shadow:0 0 0 5px rgba(249,115,22,0)}}
   .empty{text-align:center;padding:60px;color:#aaa;font-size:14px}
   .last-updated{text-align:right;font-size:11px;color:#aaa;padding:8px 32px 0}
   /* Chat modal */
@@ -231,8 +234,9 @@
       const thread = parseThread(r['Response']||'');
       const lastGuest = thread.filter(m=>m.from==='guest').slice(-1)[0];
       const preview = lastGuest ? lastGuest.text.slice(0,60) + (lastGuest.text.length>60?'…':'') : '—';
-      const hasChat = thread.length > 0;
-      const chatBtn = `<button class="chat-btn" onclick='openChat(${JSON.stringify(r)})'>💬 ${hasChat ? thread.length : ''}</button>`;
+      const lastMsg = thread.slice(-1)[0];
+      const hasUnread = lastMsg && lastMsg.from === 'guest' && String(r['Done']||'').toLowerCase() !== 'yes';
+      const chatBtn = `<button class="chat-btn${hasUnread?' unread':''}" onclick='openChat(${JSON.stringify(r)})'>💬${thread.length ? ' '+thread.length : ''}</button>`;
       const doneCol = showDoneBtn
         ? `<td><button class="done-btn" onclick="markDone(this,'${String(r['Date Sent']||'').slice(0,10)}','${r['Phone']}')">✓ Done</button></td>`
         : '';
