@@ -363,10 +363,14 @@
     if (date) {
       fp.setDate(date, false);
       renderDashboard(date);
-      // Re-render calendar to highlight data dates
       fp.redraw && fp.redraw();
     }
   });
+
+  // Auto-refresh every 30 seconds — picks up new guest replies silently
+  setInterval(function() {
+    loadData(function() { renderDashboard(currentDate); });
+  }, 30000);
 </script>
 </body>
 </html>
