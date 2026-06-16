@@ -182,8 +182,8 @@
     const replied = currentRecords.filter(r => String(r['Response']||'').trim()).length;
     const failed  = currentRecords.filter(r => String(r['Status']||'').toLowerCase()==='failed').length;
     const noReply = Math.max(0, sent - replied - failed);
-    const needsAction = currentRecords.filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes').length;
-    const done    = currentRecords.filter(r => String(r['Done']||'').toLowerCase()==='yes').length;
+    const needsAction = allRecords().filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes').length;
+    const done    = allRecords().filter(r => String(r['Done']||'').toLowerCase()==='yes').length;
 
     document.getElementById('k-sent').textContent     = sent;
     document.getElementById('k-replied').textContent  = replied;
@@ -203,12 +203,16 @@
     renderTable(currentRecords);
   }
 
+  function allRecords() {
+    return Object.values(ALL_DATA).flat();
+  }
+
   function renderTable(records) {
     let filtered;
     if (currentTab === 'action') {
-      filtered = records.filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes');
+      filtered = allRecords().filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes');
     } else if (currentTab === 'done') {
-      filtered = records.filter(r => String(r['Done']||'').toLowerCase()==='yes');
+      filtered = allRecords().filter(r => String(r['Done']||'').toLowerCase()==='yes');
     } else {
       filtered = records;
     }
