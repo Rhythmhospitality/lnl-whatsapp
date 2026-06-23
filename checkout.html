@@ -105,9 +105,9 @@
     <p class="section-note">All guests who rated 1–3 (and 4 if they gave feedback)</p>
     <table id="tbl-feedback">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Rating</th><th>Complaint / Feedback</th><th>Checkout Date</th>
+        <th>Guest</th><th>Room</th><th>Rating</th><th>Category</th><th>Complaint / Feedback</th><th>Checkout Date</th>
       </tr></thead>
-      <tbody id="body-feedback"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-feedback"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -126,16 +126,16 @@
     <p class="section-note">Guests who replied but management hasn't marked as reviewed yet. Includes late replies.</p>
     <table id="tbl-review">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Rating</th><th>Complaint / Feedback</th><th>Checkout Date</th><th>Action</th>
+        <th>Guest</th><th>Room</th><th>Rating</th><th>Category</th><th>Complaint / Feedback</th><th>Checkout Date</th><th>Action</th>
       </tr></thead>
-      <tbody id="body-review"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-review"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
 </div>
 
 <script>
-var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
+var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wLPLdOOJzqW1VrWNqBuQiQnOTLwTN8Mhc8O3E8qiVrN3/exec";
 // NOTE: update WEBHOOK_URL above after deploying v20
 
 var allData   = [];
@@ -277,9 +277,27 @@ function renderFive(list) {
   }).join("");
 }
 
+function categoryBadge(cat) {
+  var colors = {
+    "Room & Facilities":          "#e8f4fd:#1a6fa8",
+    "Cleanliness & Housekeeping": "#fef9e7:#7d6608",
+    "Food & Beverage":            "#fdf2e9:#a04000",
+    "Staff & Service":            "#f4ecf7:#7d3c98",
+    "Check-in / Check-out":       "#eafaf1:#1e8449",
+    "Pool & Recreation":          "#e8f8f5:#0e6655",
+    "Noise":                      "#fdfefe:#626567",
+    "WiFi & Technology":          "#eaf2ff:#1a5276",
+    "Billing & Charges":          "#fdedec:#922b21",
+    "Other":                      "#f2f3f4:#566573"
+  };
+  var c = colors[cat] || "#f2f3f4:#566573";
+  var parts = c.split(":");
+  return "<span style='background:" + parts[0] + ";color:" + parts[1] + ";padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap'>" + esc(cat || "Other") + "</span>";
+}
+
 function renderFeedback(list) {
   var tb = document.getElementById("body-feedback");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>No complaints or feedback for this date.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No complaints or feedback for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     var complaint = r.complaint || "<em style='color:#aaa'>No details provided</em>";
     var isLate = r.routedTo === "Late Complaint";
@@ -287,6 +305,7 @@ function renderFeedback(list) {
       "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
       "<td>" + ratingBadge(r.rating) + "</td>" +
+      "<td>" + categoryBadge(r.category) + "</td>" +
       "<td class='complaint-cell'>" + esc(complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
       "</tr>";
@@ -308,7 +327,7 @@ function renderNoReply(list) {
 
 function renderReview(list) {
   var tb = document.getElementById("body-review");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>All feedback reviewed.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='7' class='empty'>All feedback reviewed.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     var complaint = r.complaint || "<em style='color:#aaa'>No details</em>";
     var isLate = r.routedTo === "Late Complaint";
@@ -316,6 +335,7 @@ function renderReview(list) {
       "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
       "<td>" + ratingBadge(r.rating) + "</td>" +
+      "<td>" + categoryBadge(r.category) + "</td>" +
       "<td class='complaint-cell'>" + esc(complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
       "<td><button class='reviewed-btn' onclick='markReviewed(" + r.row + ",this)'>Mark Reviewed</button></td>" +
