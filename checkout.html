@@ -36,7 +36,12 @@
   .tab-btn.alert-tab.active{background:#c0392b;border-color:#c0392b}
   .table-wrap{padding:14px 32px 32px;overflow-x:auto}
   table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-  th{background:#1a3c34;color:#fff;text-align:left;padding:11px 14px;font-size:12px;font-weight:500}
+  th{background:#1a3c34;color:#fff;text-align:left;padding:11px 14px;font-size:12px;font-weight:500;cursor:pointer;user-select:none}
+  th:hover{background:#145c46}
+  th .sort-arrow{margin-left:5px;opacity:.5;font-size:10px}
+  th.sort-asc .sort-arrow::after{content:'▲';opacity:1}
+  th.sort-desc .sort-arrow::after{content:'▼';opacity:1}
+  th:not(.sort-asc):not(.sort-desc) .sort-arrow::after{content:'⇅'}
   td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#fafafa}
@@ -124,7 +129,13 @@
     <p class="section-note">Complaints / feedback not yet marked as reviewed by management. Includes late replies.</p>
     <table id="tbl-review">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Rating</th><th>Category</th><th>Complaint / Feedback</th><th>Checkout Date</th><th>Action</th>
+        <th onclick="sortTable('tbl-review',0)">Guest<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-review',1)">Room<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-review',2)">Rating<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-review',3)">Category<span class="sort-arrow"></span></th>
+        <th>Complaint / Feedback</th>
+        <th onclick="sortTable('tbl-review',5)">Checkout Date<span class="sort-arrow"></span></th>
+        <th>Action</th>
       </tr></thead>
       <tbody id="body-review"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
     </table>
@@ -135,7 +146,12 @@
     <p class="section-note">Complaints marked as reviewed by management.</p>
     <table id="tbl-done">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Rating</th><th>Category</th><th>Complaint / Feedback</th><th>Checkout Date</th>
+        <th onclick="sortTable('tbl-done',0)">Guest<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-done',1)">Room<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-done',2)">Rating<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-done',3)">Category<span class="sort-arrow"></span></th>
+        <th>Complaint / Feedback</th>
+        <th onclick="sortTable('tbl-done',5)">Checkout Date<span class="sort-arrow"></span></th>
       </tr></thead>
       <tbody id="body-done"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
     </table>
@@ -472,6 +488,37 @@ function renderWeekChart() {
 
 function esc(s) {
   return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+var sortState = {}; // { tableId: { col: N, asc: true/false } }
+
+function sortTable(tableId, col) {
+  var tbl  = document.getElementById(tableId);
+  var tbody = tbl.querySelector("tbody");
+  var rows  = Array.from(tbody.querySelectorAll("tr"));
+  if (rows.length === 0 || rows[0].cells.length <= 1) return;
+
+  var prev = sortState[tableId] || {};
+  var asc  = (prev.col === col) ? !prev.asc : true;
+  sortState[tableId] = { col: col, asc: asc };
+
+  // Update header arrows
+  var ths = tbl.querySelectorAll("th");
+  ths.forEach(function(th, i) {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (i === col) th.classList.add(asc ? "sort-asc" : "sort-desc");
+  });
+
+  rows.sort(function(a, b) {
+    var ca = a.cells[col] ? a.cells[col].textContent.trim().toLowerCase() : "";
+    var cb = b.cells[col] ? b.cells[col].textContent.trim().toLowerCase() : "";
+    // Numeric sort for Rating column
+    var na = parseFloat(ca), nb = parseFloat(cb);
+    if (!isNaN(na) && !isNaN(nb)) return asc ? na - nb : nb - na;
+    return asc ? ca.localeCompare(cb) : cb.localeCompare(ca);
+  });
+
+  rows.forEach(function(r) { tbody.appendChild(r); });
 }
 </script>
 </body>
