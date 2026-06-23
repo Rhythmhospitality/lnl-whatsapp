@@ -6,6 +6,7 @@
 <title>Rhythm Lonavala — Checkout Feedback</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#222}
@@ -71,7 +72,7 @@
   </div>
 </header>
 
-<div class="last-updated">Last updated: <span id="ts"></span></div>
+<div class="last-updated">Last updated: <span id="ts"></span> &nbsp;·&nbsp; auto-refresh every 30s</div>
 
 <div class="kpis">
   <div class="kpi green"><div class="num" id="k-five">0</div><div class="lbl">5 Star</div></div>
@@ -81,12 +82,19 @@
   <div class="kpi orange"><div class="num" id="k-review">0</div><div class="lbl">Needs Review</div></div>
 </div>
 
+<!-- Weekly complaint chart -->
+<div style="padding:18px 32px 0">
+  <div style="background:#fff;border-radius:10px;padding:18px 22px;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+    <h3 style="font-size:13px;color:#555;font-weight:500;margin-bottom:14px">Complaints by Day — Last 7 Days</h3>
+    <canvas id="weekChart" height="60"></canvas>
+  </div>
+</div>
+
 <div class="tabs">
-  <button class="tab-btn active" id="tab-five"     onclick="switchTab('five')">🌟 5 Star <span class="tab-count" id="tc-five">0</span></button>
-  <button class="tab-btn"        id="tab-feedback" onclick="switchTab('feedback')">⚠️ Feedback <span class="tab-count" id="tc-feedback">0</span></button>
-  <button class="tab-btn"        id="tab-noreply"  onclick="switchTab('noreply')">⏳ No Reply <span class="tab-count" id="tc-noreply">0</span></button>
+  <button class="tab-btn active" id="tab-five"   onclick="switchTab('five')">🌟 5 Star <span class="tab-count" id="tc-five">0</span></button>
+  <button class="tab-btn"        id="tab-noreply" onclick="switchTab('noreply')">⏳ No Reply <span class="tab-count" id="tc-noreply">0</span></button>
   <button class="tab-btn alert-tab" id="tab-review" onclick="switchTab('review')">🔴 Needs Review <span class="tab-count" id="tc-review">0</span></button>
-  <button class="tab-btn"        id="tab-done"     onclick="switchTab('done')">✅ Done <span class="tab-count" id="tc-done">0</span></button>
+  <button class="tab-btn"        id="tab-done"   onclick="switchTab('done')">✅ Done <span class="tab-count" id="tc-done">0</span></button>
 </div>
 
 <div class="table-wrap">
@@ -98,17 +106,6 @@
         <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Status</th>
       </tr></thead>
       <tbody id="body-five"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
-    </table>
-  </div>
-
-  <!-- Tab: Feedback (1-4 star with complaint) -->
-  <div id="panel-feedback" style="display:none">
-    <p class="section-note">All guests who rated 1–3 (and 4 if they gave feedback)</p>
-    <table id="tbl-feedback">
-      <thead><tr>
-        <th>Guest</th><th>Room</th><th>Rating</th><th>Category</th><th>Complaint / Feedback</th><th>Checkout Date</th>
-      </tr></thead>
-      <tbody id="body-feedback"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -150,10 +147,12 @@
 var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
 // NOTE: update WEBHOOK_URL above after deploying v20
 
-var allData   = [];
+var allData       = [];
 var datesWithData = new Set();
-var selDate   = "";
+var selDate       = "";
 var fp;
+var weekChart     = null;
+var refreshTimer  = null;
 
 function yesterday() {
   var d = new Date();
@@ -188,6 +187,7 @@ window.onload = function() {
     }
   });
   loadData();
+  startRefresh();
 };
 
 function loadData() {
@@ -199,6 +199,7 @@ function loadData() {
       fp.redraw();
       document.getElementById("ts").textContent = new Date().toLocaleTimeString("en-IN");
       render();
+      renderWeekChart();
     })
     .catch(function(err) {
       document.getElementById("ts").textContent = "Error loading data";
@@ -206,14 +207,20 @@ function loadData() {
     });
 }
 
+function startRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadData, 30000);
+}
+
 function render() {
   var rows = allData.filter(function(r) { return r.date === selDate && r.sent === "Yes"; });
 
-  var fiveList     = [];
-  var feedbackList = [];
-  var noreplyList  = [];
-  var reviewList   = [];
-  var doneList     = [];
+  var fiveList    = [];
+  var noreplyList = [];
+  var reviewList  = [];
+  var doneList    = [];
+  var lowCount    = 0;
+  var fourCount   = 0;
 
   rows.forEach(function(r) {
     var rating   = parseInt(r.rating) || 0;
@@ -228,32 +235,31 @@ function render() {
       noreplyList.push(r);
     } else if (rating === 5) {
       fiveList.push(r);
-      // 5-star does NOT go into Needs Review
     } else if (rating === 4) {
-      if (r.complaint || isLate) feedbackList.push(r);
-      if ((r.complaint || isLate) && reviewed !== "Yes") reviewList.push(r);
-      else if ((r.complaint || isLate) && reviewed === "Yes") doneList.push(r);
+      fourCount++;
+      if (r.complaint || isLate) {
+        if (reviewed !== "Yes") reviewList.push(r);
+        else doneList.push(r);
+      }
     } else if (isComplaint || isLate) {
-      feedbackList.push(r);
+      lowCount++;
       if (reviewed !== "Yes") reviewList.push(r);
       else doneList.push(r);
     }
   });
 
   // KPIs
-  var fourCount = rows.filter(function(r){ return parseInt(r.rating)===4; }).length;
   document.getElementById("k-five").textContent    = fiveList.length;
   document.getElementById("k-four").textContent    = fourCount;
-  document.getElementById("k-low").textContent     = feedbackList.length;
+  document.getElementById("k-low").textContent     = lowCount;
   document.getElementById("k-noreply").textContent = noreplyList.length;
   document.getElementById("k-review").textContent  = reviewList.length;
 
   // Tab counts
-  document.getElementById("tc-five").textContent     = fiveList.length;
-  document.getElementById("tc-feedback").textContent  = feedbackList.length;
-  document.getElementById("tc-noreply").textContent   = noreplyList.length;
-  document.getElementById("tc-review").textContent    = reviewList.length;
-  document.getElementById("tc-done").textContent      = doneList.length;
+  document.getElementById("tc-five").textContent   = fiveList.length;
+  document.getElementById("tc-noreply").textContent = noreplyList.length;
+  document.getElementById("tc-review").textContent  = reviewList.length;
+  document.getElementById("tc-done").textContent    = doneList.length;
 
   // Alert style on Needs Review tab if > 0
   var revTab = document.getElementById("tab-review");
@@ -261,7 +267,6 @@ function render() {
   else revTab.classList.remove("alert-tab");
 
   renderFive(fiveList);
-  renderFeedback(feedbackList);
   renderNoReply(noreplyList);
   renderReview(reviewList);
   renderDone(doneList);
@@ -393,9 +398,75 @@ function markReviewed(rowNum, btn) {
 }
 
 function switchTab(name) {
-  ["five","feedback","noreply","review","done"].forEach(function(t) {
+  ["five","noreply","review","done"].forEach(function(t) {
     document.getElementById("panel-" + t).style.display = t === name ? "" : "none";
     document.getElementById("tab-" + t).classList.toggle("active", t === name);
+  });
+}
+
+function renderWeekChart() {
+  // Build last 7 days labels + complaint counts from ALL data (not just selected date)
+  var days = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  var complaints = days.map(function(day) {
+    return allData.filter(function(r) {
+      var rating   = parseInt(r.rating) || 0;
+      var routedTo = r.routedTo.trim();
+      var noReply  = r.state.trim() === "" || r.state.trim() === "pending_rating";
+      return r.date === day && r.sent === "Yes" && !noReply &&
+             ((rating >= 1 && rating <= 3) || routedTo === "Late Complaint");
+    }).length;
+  });
+
+  var fiveStars = days.map(function(day) {
+    return allData.filter(function(r) {
+      return r.date === day && r.sent === "Yes" && parseInt(r.rating) === 5;
+    }).length;
+  });
+
+  var labels = days.map(function(d) {
+    var parts = d.split("-");
+    return parts[2] + "/" + parts[1];
+  });
+
+  var ctx = document.getElementById("weekChart").getContext("2d");
+  if (weekChart) weekChart.destroy();
+  weekChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Complaints (1–3★)",
+          data: complaints,
+          backgroundColor: "#f8d7da",
+          borderColor: "#c0392b",
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: "5 Star",
+          data: fiveStars,
+          backgroundColor: "#d4edda",
+          borderColor: "#1a7a4a",
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "top", labels: { font: { size: 12 } } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } },
+        x: { ticks: { font: { size: 11 } } }
+      }
+    }
   });
 }
 
