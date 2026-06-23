@@ -62,6 +62,30 @@
   .flatpickr-day.has-data:hover{background:#aad4b8 !important}
   .flatpickr-day.selected{background:#1a3c34 !important;border-color:#1a3c34 !important;color:#fff !important}
   .needs-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0392b;margin-right:5px;vertical-align:middle}
+  /* Chat Modal */
+  .chat-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+  .chat-overlay.open{display:flex}
+  .chat-modal{background:#fff;border-radius:12px;width:420px;max-width:95vw;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+  .chat-header{background:#1a3c34;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+  .chat-header-name{font-weight:700;font-size:14px}
+  .chat-header-phone{font-size:11px;opacity:.7;margin-top:2px}
+  .chat-close-btn{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1;padding:0}
+  .chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:180px;max-height:380px}
+  .chat-bwrap{display:flex}
+  .chat-bwrap.guest{justify-content:flex-start}
+  .chat-bwrap.us{justify-content:flex-end}
+  .chat-bubble{max-width:75%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.45}
+  .chat-bwrap.guest .chat-bubble{background:#f0f0f0;color:#222;border-radius:4px 14px 14px 14px}
+  .chat-bwrap.us .chat-bubble{background:#1a3c34;color:#fff;border-radius:14px 4px 14px 14px}
+  .chat-time{font-size:10px;opacity:.6;margin-top:4px}
+  .chat-no-msgs{text-align:center;color:#aaa;padding:30px;font-size:13px}
+  .chat-footer{padding:12px;border-top:1px solid #eee;display:flex;gap:8px;align-items:flex-end}
+  .chat-footer textarea{flex:1;border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;resize:none;font-family:inherit;outline:none}
+  .chat-footer textarea:focus{border-color:#1a3c34}
+  .chat-send-btn{background:#1a3c34;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .chat-send-btn:disabled{background:#aaa;cursor:default}
+  .chat-btn{background:#e8f4ef;color:#1a3c34;border:1px solid #1a3c34;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer}
+  .chat-btn:hover{background:#1a3c34;color:#fff}
 </style>
 </head>
 <body>
@@ -108,9 +132,9 @@
   <div id="panel-five">
     <table id="tbl-five">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Status</th>
+        <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Status</th><th>Chat</th>
       </tr></thead>
-      <tbody id="body-five"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-five"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -118,9 +142,9 @@
   <div id="panel-noreply" style="display:none">
     <table id="tbl-noreply">
       <thead><tr>
-        <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th>
+        <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Chat</th>
       </tr></thead>
-      <tbody id="body-noreply"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-noreply"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -136,8 +160,9 @@
         <th>Complaint / Feedback</th>
         <th onclick="sortTable('tbl-review',5)">Checkout Date<span class="sort-arrow"></span></th>
         <th>Action</th>
+        <th>Chat</th>
       </tr></thead>
-      <tbody id="body-review"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-review"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -152,15 +177,16 @@
         <th onclick="sortTable('tbl-done',3)">Category<span class="sort-arrow"></span></th>
         <th>Complaint / Feedback</th>
         <th onclick="sortTable('tbl-done',5)">Checkout Date<span class="sort-arrow"></span></th>
+        <th>Chat</th>
       </tr></thead>
-      <tbody id="body-done"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-done"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
 </div>
 
 <script>
-var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
+var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wLPLdOOJzqW1VrWNqBuQiQnOTLwTN8Mhc8O3E8qiVrN3/exec";
 // NOTE: update WEBHOOK_URL above after deploying v20
 
 var allData       = [];
@@ -169,6 +195,7 @@ var selDate       = "";
 var fp;
 var weekChart     = null;
 var refreshTimer  = null;
+var chatThreads   = {}; // rowNum → thread JSON string
 
 function yesterday() {
   var d = new Date();
@@ -295,14 +322,16 @@ function ratingBadge(r) {
 
 function renderFive(list) {
   var tb = document.getElementById("body-five");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>No 5-star guests for this date.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No 5-star guests for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
+    chatThreads[r.row] = r.thread || "";
     return "<tr>" +
       "<td>" + esc(r.name) + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
       "<td>" + esc(r.phone) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
       "<td><span class='rating-badge r5'>Sent to Google Review</span></td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
 }
@@ -347,22 +376,25 @@ function renderFeedback(list) {
 
 function renderNoReply(list) {
   var tb = document.getElementById("body-noreply");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='4' class='empty'>All guests replied for this date.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>All guests replied for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
+    chatThreads[r.row] = r.thread || "";
     return "<tr>" +
       "<td>" + esc(r.name) + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
       "<td>" + esc(r.phone) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
 }
 
 function renderReview(list) {
   var tb = document.getElementById("body-review");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='7' class='empty'>All feedback reviewed. ✓</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='8' class='empty'>All feedback reviewed. ✓</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     var isLate = r.routedTo === "Late Complaint";
+    chatThreads[r.row] = r.thread || "";
     return "<tr id='rv-" + r.row + "'>" +
       "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
@@ -371,15 +403,17 @@ function renderReview(list) {
       "<td class='complaint-cell'>" + complaintCell(r.complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
       "<td><button class='reviewed-btn' onclick='markReviewed(" + r.row + ",this)'>Mark Reviewed</button></td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
 }
 
 function renderDone(list) {
   var tb = document.getElementById("body-done");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No reviewed complaints for this date.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='7' class='empty'>No reviewed complaints for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     var isLate = r.routedTo === "Late Complaint";
+    chatThreads[r.row] = r.thread || "";
     return "<tr style='opacity:.7'>" +
       "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
@@ -387,6 +421,7 @@ function renderDone(list) {
       "<td>" + categoryBadge(r.category) + "</td>" +
       "<td class='complaint-cell'>" + complaintCell(r.complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
 }
@@ -520,6 +555,97 @@ function sortTable(tableId, col) {
 
   rows.forEach(function(r) { tbody.appendChild(r); });
 }
+
+var _chatRowNum = null;
+var _chatPhone  = "";
+var _chatName   = "";
+
+function chatOpen(rowNum, phone, name) {
+  _chatRowNum = rowNum;
+  _chatPhone  = phone;
+  _chatName   = name;
+  document.getElementById("chat-modal-name").textContent  = name;
+  document.getElementById("chat-modal-phone").textContent = "+" + phone.replace(/\D/g,"");
+  document.getElementById("chat-input").value = "";
+  chatRenderThread(chatThreads[rowNum] || "");
+  document.getElementById("chat-overlay").classList.add("open");
+  document.getElementById("chat-input").focus();
+}
+
+function chatClose() {
+  document.getElementById("chat-overlay").classList.remove("open");
+  _chatRowNum = null; _chatPhone = ""; _chatName = "";
+}
+
+function chatEsc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+}
+
+function chatRenderThread(raw) {
+  var body = document.getElementById("chat-body");
+  var msgs = [];
+  try {
+    var s = (raw||"").trim();
+    if (s.charAt(0) === "[") msgs = JSON.parse(s);
+    else if (s) msgs = [{from:"guest", text:s, time:""}];
+  } catch(e) {}
+  if (!msgs.length) {
+    body.innerHTML = "<div class='chat-no-msgs'>No messages yet — send one below.</div>";
+  } else {
+    body.innerHTML = msgs.map(function(m) {
+      var side = m.from === "us" ? "us" : "guest";
+      return "<div class='chat-bwrap " + side + "'><div class='chat-bubble'>" +
+        chatEsc(m.text||"") + "<div class='chat-time'>" + chatEsc(m.time||"") + "</div></div></div>";
+    }).join("");
+    body.scrollTop = body.scrollHeight;
+  }
+}
+
+function chatSend() {
+  var input = document.getElementById("chat-input");
+  var btn   = document.getElementById("chat-send-btn");
+  var msg   = input.value.trim();
+  if (!msg || !_chatPhone) return;
+  btn.disabled = true; btn.textContent = "Sending…";
+  fetch(WEBHOOK_URL + "?action=reply&phone=" + encodeURIComponent(_chatPhone) + "&message=" + encodeURIComponent(msg))
+    .then(function() {
+      // Optimistically update local thread
+      var raw = (chatThreads[_chatRowNum]||"").trim();
+      var msgs = [];
+      try { msgs = raw.charAt(0)==="[" ? JSON.parse(raw) : (raw ? [{from:"guest",text:raw,time:""}] : []); } catch(e) {}
+      var now = new Date().toLocaleString("en-IN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"});
+      msgs.push({from:"us", text:msg, time:now});
+      chatThreads[_chatRowNum] = JSON.stringify(msgs);
+      input.value = ""; input.style.height = "";
+      chatRenderThread(chatThreads[_chatRowNum]);
+      btn.disabled = false; btn.textContent = "Send";
+    })
+    .catch(function(e) {
+      alert("Send failed: " + e.message);
+      btn.disabled = false; btn.textContent = "Send";
+    });
+}
 </script>
+
+<!-- Chat Modal -->
+<div class="chat-overlay" id="chat-overlay" onclick="if(event.target===this)chatClose()">
+  <div class="chat-modal">
+    <div class="chat-header">
+      <div>
+        <div class="chat-header-name" id="chat-modal-name"></div>
+        <div class="chat-header-phone" id="chat-modal-phone"></div>
+      </div>
+      <button class="chat-close-btn" onclick="chatClose()">✕</button>
+    </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-footer">
+      <textarea id="chat-input" rows="1" placeholder="Type a message…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="chatSend()">Send</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
