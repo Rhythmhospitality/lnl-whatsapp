@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Rhythm Lonavala — WhatsApp Outreach</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#222}
+  header{background:#1a3c34;color:#fff;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  header h1{font-size:20px;font-weight:600}
+  header p{font-size:12px;opacity:.7;margin-top:3px}
+  .cal-wrap{position:relative;display:flex;align-items:center;gap:8px}
+  .cal-wrap .cal-icon{font-size:18px;cursor:pointer}
+  #datePicker{background:#fff;color:#1a3c34;border:none;padding:8px 14px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:140px}
+  .kpis{display:flex;gap:14px;padding:22px 32px 0;flex-wrap:wrap}
+  .kpi{background:#fff;border-radius:10px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .kpi .num{font-size:32px;font-weight:700;color:#1a3c34}
+  .kpi .lbl{font-size:12px;color:#888;margin-top:3px}
+  .charts{display:flex;gap:16px;padding:18px 32px;flex-wrap:wrap}
+  .chart-box{background:#fff;border-radius:10px;padding:18px;flex:1;min-width:280px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .chart-box h3{font-size:13px;color:#555;margin-bottom:12px;font-weight:500}
+  .tabs{display:flex;gap:0;padding:18px 32px 0;border-bottom:none}
+  .tab-btn{padding:10px 24px;border:2px solid #1a3c34;background:#fff;color:#1a3c34;font-size:13px;font-weight:600;cursor:pointer;border-right:none;transition:all .15s}
+  .tab-btn:first-child{border-radius:8px 0 0 8px}
+  .tab-btn:last-child{border-right:2px solid #1a3c34;border-radius:0 8px 8px 0}
+  .tab-btn.active{background:#1a3c34;color:#fff}
+  .tab-count{display:inline-block;background:rgba(255,255,255,.25);border-radius:12px;padding:1px 7px;font-size:11px;margin-left:6px}
+  .tab-btn:not(.active) .tab-count{background:#1a3c34;color:#fff}
+  .table-wrap{padding:12px 32px 32px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  th{background:#1a3c34;color:#fff;text-align:left;padding:11px 14px;font-size:12px;font-weight:500}
+  td{padding:10px 14px;font-size:12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge.sent{background:#d4edda;color:#155724}
+  .badge.failed{background:#f8d7da;color:#721c24}
+  .response-cell{color:#444;max-width:260px;font-style:italic}
+  .done-btn{background:#1a3c34;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+  .done-btn:hover{background:#145c46}
+  .done-btn:disabled{background:#aaa;cursor:default}
+  .chat-btn{background:#f0f9f4;color:#1a3c34;border:1px solid #1a3c34;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+  .chat-btn:hover{background:#d4edda}
+  .chat-btn.unread{background:#fff3cd;color:#856404;border-color:#f97316;animation:pulse 1.5s infinite}
+  .chat-btn.unread:hover{background:#ffe69c}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.4)}50%{box-shadow:0 0 0 5px rgba(249,115,22,0)}}
+  .empty{text-align:center;padding:60px;color:#aaa;font-size:14px}
+  .last-updated{text-align:right;font-size:11px;color:#aaa;padding:8px 32px 0}
+  /* Chat modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+  .modal-header{background:#1a3c34;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+  .modal-header h3{font-size:15px;font-weight:600;margin:0}
+  .modal-header p{font-size:11px;opacity:.7;margin:2px 0 0}
+  .modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}
+  .chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f5f5f5}
+  .bubble{max-width:80%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.4}
+  .bubble.guest{background:#fff;border:1px solid #e5e5e5;align-self:flex-start;border-bottom-left-radius:3px}
+  .bubble.us{background:#1a3c34;color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+  .bubble .who{font-size:10px;opacity:.6;margin-bottom:3px;font-weight:600}
+  .bubble .time{font-size:10px;opacity:.5;margin-top:4px;text-align:right}
+  .chat-footer{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px;background:#fff}
+  .chat-footer textarea{flex:1;border:1px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;resize:none;height:60px;font-family:inherit}
+  .chat-footer textarea:focus{outline:none;border-color:#1a3c34}
+  .send-btn{background:#1a3c34;color:#fff;border:none;padding:0 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .send-btn:disabled{background:#aaa;cursor:default}
+  .warning-24h{font-size:11px;color:#e67e22;padding:6px 16px;background:#fff8f0;text-align:center;border-top:1px solid #f5e0c8}
+  .needs-action-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:6px;vertical-align:middle}
+  /* Flatpickr theme overrides */
+  .flatpickr-day.has-data{background:#d4edda !important;color:#155724 !important;font-weight:700}
+  .flatpickr-day.has-data:hover{background:#aad4b8 !important}
+  .flatpickr-day.selected{background:#1a3c34 !important;border-color:#1a3c34 !important;color:#fff !important}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Rhythm Lonavala — WhatsApp Pre-Arrival Outreach</h1>
+    <p>72-hour pre-arrival messages · Guest responses</p>
+  </div>
+  <div class="cal-wrap">
+    <span class="cal-icon" onclick="fp.open()">📅</span>
+    <input type="text" id="datePicker" placeholder="Pick a date" readonly>
+  </div>
+</header>
+
+<div class="last-updated">Last updated: <span id="ts"></span></div>
+
+<!-- Chat Modal -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="chatGuestName">Guest</h3>
+        <p id="chatGuestPhone"></p>
+      </div>
+      <button class="modal-close" onclick="closeChat()">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="warning-24h" id="chat24hWarn" style="display:none">⚠️ More than 24 hours since last guest message — free-text reply may be blocked by WhatsApp.</div>
+    <div class="chat-footer">
+      <textarea id="chatInput" placeholder="Type your reply..."></textarea>
+      <button class="send-btn" id="chatSendBtn" onclick="sendStaffReply()">Send</button>
+    </div>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="num" id="k-sent">0</div><div class="lbl">Messages Sent</div></div>
+  <div class="kpi"><div class="num" id="k-replied">0</div><div class="lbl">Responses Received</div></div>
+  <div class="kpi"><div class="num" id="k-no-reply">0</div><div class="lbl">No Response</div></div>
+  <div class="kpi"><div class="num" id="k-failed">0</div><div class="lbl">Failed to Send</div></div>
+</div>
+
+<div class="charts">
+  <div class="chart-box" style="max-width:300px">
+    <h3>Response Rate</h3>
+    <canvas id="donutChart" height="190"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>Messages Sent by Date (last 14 days)</h3>
+    <canvas id="barChart" height="80"></canvas>
+  </div>
+</div>
+
+<div class="tabs" style="padding:18px 32px 0">
+  <button class="tab-btn active" onclick="switchTab('all',this)">All <span class="tab-count" id="cnt-all">0</span></button>
+  <button class="tab-btn" onclick="switchTab('action',this)"><span class="needs-action-dot"></span>Needs Action <span class="tab-count" id="cnt-action">0</span></button>
+  <button class="tab-btn" onclick="switchTab('done',this)">Done <span class="tab-count" id="cnt-done">0</span></button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead id="tableHead"></thead>
+    <tbody id="tableBody">
+      <tr><td colspan="7" class="empty">Select a date above</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  document.getElementById('ts').textContent = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+
+  const APPS_URL = "https://script.google.com/macros/s/AKfycbwP1wla3kgBguxZ-wDdVNHgNfMX0Av7y-3_1ZdnWBp8w9mNd-uNiNRZgkSQgehlp_qQ/exec";
+  let ALL_DATA = {};
+  let currentTab = 'all';
+  let currentRecords = [];
+  let currentDate = '';
+  let donutChart = null, barChart = null;
+
+  function switchTab(tab, btn) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable(currentRecords);
+  }
+
+  function loadData(callback) {
+    fetch(APPS_URL + '?action=data')
+      .then(r => r.json())
+      .then(data => {
+        ALL_DATA = data;
+        const dates = Object.keys(data).sort().reverse();
+        const latest = dates[0] || currentDate;
+        if (!currentDate && latest) currentDate = latest;
+        if (typeof fp !== 'undefined' && fp.redraw) fp.redraw();
+        if (callback) callback(currentDate || latest);
+        renderBarChart();
+      })
+      .catch(e => { console.error('Data load failed', e); if (callback) callback(currentDate); });
+  }
+
+  function renderDashboard(date) {
+    currentDate = date;
+    currentRecords = ALL_DATA[date] || [];
+    const sent    = currentRecords.length;
+    const replied = currentRecords.filter(r => String(r['Response']||'').trim()).length;
+    const failed  = currentRecords.filter(r => String(r['Status']||'').toLowerCase()==='failed').length;
+    const noReply = Math.max(0, sent - replied - failed);
+    const needsAction = allRecords().filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes').length;
+    const done    = allRecords().filter(r => String(r['Done']||'').toLowerCase()==='yes').length;
+
+    document.getElementById('k-sent').textContent     = sent;
+    document.getElementById('k-replied').textContent  = replied;
+    document.getElementById('k-no-reply').textContent = noReply;
+    document.getElementById('k-failed').textContent   = failed;
+    document.getElementById('cnt-all').textContent    = sent;
+    document.getElementById('cnt-action').textContent = needsAction;
+    document.getElementById('cnt-done').textContent   = done;
+
+    if (donutChart) donutChart.destroy();
+    donutChart = new Chart(document.getElementById('donutChart'),{
+      type:'doughnut',
+      data:{labels:['Replied','No Response','Failed'],datasets:[{data:[replied,noReply,failed],backgroundColor:['#22c55e','#e5e7eb','#f87171'],borderWidth:0}]},
+      options:{plugins:{legend:{position:'bottom',labels:{font:{size:11}}}},cutout:'65%'}
+    });
+
+    renderTable(currentRecords);
+  }
+
+  function allRecords() {
+    return Object.values(ALL_DATA).flat();
+  }
+
+  function renderTable(records) {
+    let filtered;
+    if (currentTab === 'action') {
+      filtered = allRecords().filter(r => String(r['Response']||'').trim() && String(r['Done']||'').toLowerCase()!=='yes');
+    } else if (currentTab === 'done') {
+      filtered = allRecords().filter(r => String(r['Done']||'').toLowerCase()==='yes');
+    } else {
+      filtered = records;
+    }
+
+    const showDoneBtn = currentTab === 'action';
+    const thead = document.getElementById('tableHead');
+    const tbody = document.getElementById('tableBody');
+
+    thead.innerHTML = '<tr>' +
+      '<th>Guest Name</th><th>Phone</th><th>Check-in Date</th><th>Confirmation ID</th><th>Status</th><th>Last Message</th><th>Chat</th>' +
+      (showDoneBtn ? '<th>Mark Done</th>' : '') +
+      '</tr>';
+
+    if (!filtered.length) {
+      const msg = currentTab==='action' ? 'No pending replies — all clear!' : currentTab==='done' ? 'No completed responses yet.' : 'No messages sent on this date.';
+      tbody.innerHTML = `<tr><td colspan="${showDoneBtn?8:7}" class="empty">${msg}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+      const status = String(r['Status']||'');
+      const badge  = status.toLowerCase()==='failed' ? '<span class="badge failed">Failed</span>' : '<span class="badge sent">Sent</span>';
+      const thread = parseThread(r['Response']||'');
+      const lastGuest = thread.filter(m=>m.from==='guest').slice(-1)[0];
+      const preview = lastGuest ? lastGuest.text.slice(0,60) + (lastGuest.text.length>60?'…':'') : '—';
+      const lastMsg = thread.slice(-1)[0];
+      const hasUnread = lastMsg && lastMsg.from === 'guest' && String(r['Done']||'').toLowerCase() !== 'yes';
+      const chatBtn = `<button class="chat-btn${hasUnread?' unread':''}" onclick='openChat(${JSON.stringify(r)})'>💬${thread.length ? ' '+thread.length : ''}</button>`;
+      const doneCol = showDoneBtn
+        ? `<td><button class="done-btn" onclick="markDone(this,'${String(r['Date Sent']||'').slice(0,10)}','${r['Phone']}')">✓ Done</button></td>`
+        : '';
+      return `<tr>
+        <td>${r['Guest Name']||''}</td>
+        <td>${r['Phone']||''}</td>
+        <td>${r['Check-in Date']||''}</td>
+        <td>${r['Confirmation ID']||''}</td>
+        <td>${badge}</td>
+        <td class="response-cell">${preview}</td>
+        <td>${chatBtn}</td>
+        ${doneCol}
+      </tr>`;
+    }).join('');
+  }
+
+  function markDone(btn, date, phone) {
+    if (!APPS_URL) { alert('Apps Script URL not configured yet.'); return; }
+    btn.disabled = true;
+    btn.textContent = '...';
+    var img = new Image();
+    img.onload = img.onerror = function() {
+      // Reload live data from sheet, then re-render
+      loadData(function(d) { renderDashboard(d); });
+    };
+    img.src = APPS_URL + '?action=done&date=' + encodeURIComponent(date) + '&phone=' + encodeURIComponent(String(phone));
+  }
+
+  function renderBarChart() {
+    const allDates = Object.keys(ALL_DATA).sort().slice(-14);
+    const counts   = allDates.map(d=>(ALL_DATA[d]||[]).length);
+    if (barChart) barChart.destroy();
+    barChart = new Chart(document.getElementById('barChart'),{
+      type:'bar',
+      data:{labels:allDates.map(d=>d.slice(5)),datasets:[{label:'Messages Sent',data:counts,backgroundColor:'#1a3c34',borderRadius:4}]},
+      options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{ticks:{font:{size:11}}}}}
+    });
+  }
+
+  let chatPhone = '';
+
+  function parseThread(raw) {
+    try {
+      const s = String(raw||'').trim();
+      if (s.startsWith('[')) return JSON.parse(s);
+      if (s) return [{from:'guest', text:s, time:''}];
+      return [];
+    } catch(e) { return []; }
+  }
+
+  function openChat(r) {
+    chatPhone = String(r['Phone']||'');
+    document.getElementById('chatGuestName').textContent = r['Guest Name']||'Guest';
+    document.getElementById('chatGuestPhone').textContent = chatPhone;
+    document.getElementById('chatInput').value = '';
+
+    const thread = parseThread(r['Response']||'');
+    const body   = document.getElementById('chatBody');
+    body.innerHTML = thread.length ? thread.map(m => `
+      <div class="bubble ${m.from}">
+        <div class="who">${m.from==='us' ? 'Rhythm Lonavala' : (r['Guest Name']||'Guest')}</div>
+        <div>${m.text}</div>
+        <div class="time">${m.time||''}</div>
+      </div>`).join('') : '<div style="text-align:center;color:#aaa;padding:30px;font-size:13px">No messages yet</div>';
+    body.scrollTop = body.scrollHeight;
+
+    // 24h warning — check last guest message time
+    const lastGuest = thread.filter(m=>m.from==='guest').slice(-1)[0];
+    const warn = document.getElementById('chat24hWarn');
+    if (lastGuest && lastGuest.time) {
+      const hrs = (Date.now() - new Date(lastGuest.time).getTime()) / 3600000;
+      warn.style.display = hrs > 24 ? 'block' : 'none';
+    } else { warn.style.display = 'none'; }
+
+    document.getElementById('chatModal').classList.add('open');
+  }
+
+  function closeChat() {
+    document.getElementById('chatModal').classList.remove('open');
+    chatPhone = '';
+  }
+
+  function sendStaffReply() {
+    const msg = document.getElementById('chatInput').value.trim();
+    if (!msg || !chatPhone) return;
+    const btn = document.getElementById('chatSendBtn');
+    btn.disabled = true; btn.textContent = '...';
+
+    const url = APPS_URL + '?action=reply&phone=' + encodeURIComponent(chatPhone) + '&message=' + encodeURIComponent(msg);
+    const img = new Image();
+    img.onload = img.onerror = function() {
+      btn.disabled = false; btn.textContent = 'Send';
+      document.getElementById('chatInput').value = '';
+      // Reload data and reopen chat with fresh data
+      loadData(function() {
+        const updated = (ALL_DATA[currentDate]||[]).find(r => String(r['Phone']||'') === chatPhone);
+        if (updated) openChat(updated);
+        renderDashboard(currentDate);
+      });
+    };
+    img.src = url;
+  }
+
+  // Close modal on overlay click
+  document.getElementById('chatModal').addEventListener('click', function(e) {
+    if (e.target === this) closeChat();
+  });
+
+  // Initialise Flatpickr calendar
+  var fp = flatpickr('#datePicker', {
+    dateFormat: 'Y-m-d',
+    disableMobile: true,
+    onDayCreate: function(dObj, dStr, fp, dayElem) {
+      // Highlight dates that have data
+      var d = dayElem.dateObj;
+      var key = d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0');
+      if (ALL_DATA[key]) dayElem.classList.add('has-data');
+    },
+    onChange: function(selectedDates, dateStr) {
+      if (dateStr && ALL_DATA[dateStr]) renderDashboard(dateStr);
+    }
+  });
+
+  // Load live data on page open
+  loadData(function(date) {
+    if (date) {
+      fp.setDate(date, false);
+      renderDashboard(date);
+      fp.redraw && fp.redraw();
+    }
+  });
+
+  // Auto-refresh every 30 seconds — picks up new guest replies silently
+  setInterval(function() {
+    loadData(function() { renderDashboard(currentDate); });
+  }, 30000);
+</script>
+</body>
+</html>
