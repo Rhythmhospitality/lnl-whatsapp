@@ -265,25 +265,21 @@ function render() {
   var fourCount   = 0;
 
   rows.forEach(function(r) {
-    var rating   = parseInt(r.rating) || 0;
+    var rating   = (r.rating || "").trim();
     var state    = r.state.trim();
     var reviewed = r.reviewed.trim();
     var routedTo = r.routedTo.trim();
-    var isComplaint = rating >= 1 && rating <= 3;
-    var isLate      = routedTo === "Late Complaint";
-    var noReply     = state === "" || state === "pending_rating";
 
-    if (noReply) {
+    var noReply     = state === "" || state === "pending_rating";
+    var isPositive  = rating === "Positive"  || routedTo === "Google Review";
+    var isDismissed = rating === "No Reply"  || routedTo === "Dismissed";
+    var isComplaint = rating === "Complaint" || routedTo === "Internal Complaint" || routedTo === "Late Complaint";
+
+    if (noReply || isDismissed) {
       noreplyList.push(r);
-    } else if (rating === 5) {
+    } else if (isPositive) {
       fiveList.push(r);
-    } else if (rating === 4) {
-      fourCount++;
-      if (r.complaint || isLate) {
-        if (reviewed !== "Yes") reviewList.push(r);
-        else doneList.push(r);
-      }
-    } else if (isComplaint || isLate) {
+    } else if (isComplaint) {
       lowCount++;
       if (reviewed !== "Yes") reviewList.push(r);
       else doneList.push(r);
@@ -316,7 +312,13 @@ function render() {
 
 function ratingBadge(r) {
   if (!r) return "-";
-  return "<span class='rating-badge r" + r + "'>" + r + " ★</span>";
+  var map = {
+    "Positive":  "<span class='rating-badge r5'>⭐ Review</span>",
+    "No Reply":  "<span class='rating-badge r4'>Not Now</span>",
+    "Dismissed": "<span class='rating-badge r4'>Not Now</span>",
+    "Complaint": "<span class='rating-badge r2'>⚠️ Complaint</span>"
+  };
+  return map[r] || "<span class='rating-badge'>" + r + "</span>";
 }
 
 function renderFive(list) {
