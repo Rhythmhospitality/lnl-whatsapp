@@ -104,11 +104,11 @@
 <div class="last-updated">Last updated: <span id="ts"></span> &nbsp;·&nbsp; auto-refresh every 30s</div>
 
 <div class="kpis">
-  <div class="kpi green"><div class="num" id="k-five">0</div><div class="lbl">5 Star</div></div>
-  <div class="kpi"><div class="num" id="k-four">0</div><div class="lbl">4 Star</div></div>
-  <div class="kpi red"><div class="num" id="k-low">0</div><div class="lbl">1–3 Star (Complaint)</div></div>
+  <div class="kpi green"><div class="num" id="k-reviews">0</div><div class="lbl">Reviews Given</div></div>
+  <div class="kpi"><div class="num" id="k-noreview">0</div><div class="lbl">No Review</div></div>
   <div class="kpi gray"><div class="num" id="k-noreply">0</div><div class="lbl">No Reply</div></div>
-  <div class="kpi orange"><div class="num" id="k-review">0</div><div class="lbl">Needs Review</div></div>
+  <div class="kpi red"><div class="num" id="k-complaint">0</div><div class="lbl">Complaint</div></div>
+  <div class="kpi orange"><div class="num" id="k-done">0</div><div class="lbl">Done</div></div>
 </div>
 
 <!-- Weekly complaint chart -->
@@ -120,21 +120,32 @@
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" id="tab-five"   onclick="switchTab('five')">🌟 5 Star <span class="tab-count" id="tc-five">0</span></button>
-  <button class="tab-btn"        id="tab-noreply" onclick="switchTab('noreply')">⏳ No Reply <span class="tab-count" id="tc-noreply">0</span></button>
-  <button class="tab-btn alert-tab" id="tab-review" onclick="switchTab('review')">🔴 Needs Review <span class="tab-count" id="tc-review">0</span></button>
-  <button class="tab-btn"        id="tab-done"   onclick="switchTab('done')">✅ Done <span class="tab-count" id="tc-done">0</span></button>
+  <button class="tab-btn active" id="tab-reviews"   onclick="switchTab('reviews')">⭐ Reviews Given <span class="tab-count" id="tc-reviews">0</span></button>
+  <button class="tab-btn"        id="tab-noreview"  onclick="switchTab('noreview')">🚫 No Review <span class="tab-count" id="tc-noreview">0</span></button>
+  <button class="tab-btn"        id="tab-noreply"   onclick="switchTab('noreply')">⏳ No Reply <span class="tab-count" id="tc-noreply">0</span></button>
+  <button class="tab-btn alert-tab" id="tab-complaint" onclick="switchTab('complaint')">🔴 Complaint <span class="tab-count" id="tc-complaint">0</span></button>
+  <button class="tab-btn"        id="tab-done"      onclick="switchTab('done')">✅ Done <span class="tab-count" id="tc-done">0</span></button>
 </div>
 
 <div class="table-wrap">
 
-  <!-- Tab: 5 Star -->
-  <div id="panel-five">
-    <table id="tbl-five">
+  <!-- Tab: Reviews Given -->
+  <div id="panel-reviews">
+    <table id="tbl-reviews">
       <thead><tr>
         <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Status</th><th>Chat</th>
       </tr></thead>
-      <tbody id="body-five"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-reviews"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Tab: No Review -->
+  <div id="panel-noreview" style="display:none">
+    <table id="tbl-noreview">
+      <thead><tr>
+        <th>Guest</th><th>Room</th><th>Phone</th><th>Checkout Date</th><th>Chat</th>
+      </tr></thead>
+      <tbody id="body-noreview"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -148,38 +159,36 @@
     </table>
   </div>
 
-  <!-- Tab: Needs Review -->
-  <div id="panel-review" style="display:none">
-    <p class="section-note">Complaints / feedback not yet marked as reviewed by management. Includes late replies.</p>
-    <table id="tbl-review">
+  <!-- Tab: Complaint -->
+  <div id="panel-complaint" style="display:none">
+    <p class="section-note">Guests who filed a complaint — not yet reviewed by management.</p>
+    <table id="tbl-complaint">
       <thead><tr>
-        <th onclick="sortTable('tbl-review',0)">Guest<span class="sort-arrow"></span></th>
-        <th onclick="sortTable('tbl-review',1)">Room<span class="sort-arrow"></span></th>
-        <th onclick="sortTable('tbl-review',2)">Rating<span class="sort-arrow"></span></th>
-        <th onclick="sortTable('tbl-review',3)">Category<span class="sort-arrow"></span></th>
-        <th>Complaint / Feedback</th>
-        <th onclick="sortTable('tbl-review',5)">Checkout Date<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-complaint',0)">Guest<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-complaint',1)">Room<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-complaint',2)">Category<span class="sort-arrow"></span></th>
+        <th>Complaint Details</th>
+        <th onclick="sortTable('tbl-complaint',4)">Checkout Date<span class="sort-arrow"></span></th>
         <th>Action</th>
         <th>Chat</th>
       </tr></thead>
-      <tbody id="body-review"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-complaint"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
   <!-- Tab: Done -->
   <div id="panel-done" style="display:none">
-    <p class="section-note">Complaints marked as reviewed by management.</p>
+    <p class="section-note">Complaints reviewed and resolved by management.</p>
     <table id="tbl-done">
       <thead><tr>
         <th onclick="sortTable('tbl-done',0)">Guest<span class="sort-arrow"></span></th>
         <th onclick="sortTable('tbl-done',1)">Room<span class="sort-arrow"></span></th>
-        <th onclick="sortTable('tbl-done',2)">Rating<span class="sort-arrow"></span></th>
-        <th onclick="sortTable('tbl-done',3)">Category<span class="sort-arrow"></span></th>
-        <th>Complaint / Feedback</th>
-        <th onclick="sortTable('tbl-done',5)">Checkout Date<span class="sort-arrow"></span></th>
+        <th onclick="sortTable('tbl-done',2)">Category<span class="sort-arrow"></span></th>
+        <th>Complaint Details</th>
+        <th onclick="sortTable('tbl-done',4)">Checkout Date<span class="sort-arrow"></span></th>
         <th>Chat</th>
       </tr></thead>
-      <tbody id="body-done"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+      <tbody id="body-done"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
     </table>
   </div>
 
@@ -257,12 +266,11 @@ function startRefresh() {
 function render() {
   var rows = allData.filter(function(r) { return r.date === selDate && r.sent === "Yes"; });
 
-  var fiveList    = [];
-  var noreplyList = [];
-  var reviewList  = [];
-  var doneList    = [];
-  var lowCount    = 0;
-  var fourCount   = 0;
+  var reviewsList   = [];
+  var noreviewList  = [];
+  var noreplyList   = [];
+  var complaintList = [];
+  var doneList      = [];
 
   rows.forEach(function(r) {
     var rating   = (r.rating || "").trim();
@@ -274,39 +282,43 @@ function render() {
     var isPositive  = rating === "Positive"  || routedTo === "Google Review";
     var isDismissed = rating === "No Reply"  || routedTo === "Dismissed";
     var isComplaint = rating === "Complaint" || routedTo === "Internal Complaint" || routedTo === "Late Complaint";
+    var isUnknown   = rating === "Unknown"   || routedTo === "Unknown Reply";
 
-    if (noReply || isDismissed) {
+    if (noReply) {
       noreplyList.push(r);
     } else if (isPositive) {
-      fiveList.push(r);
-    } else if (isComplaint) {
-      lowCount++;
-      if (reviewed !== "Yes") reviewList.push(r);
-      else doneList.push(r);
+      reviewsList.push(r);
+    } else if (isDismissed) {
+      noreviewList.push(r);
+    } else if (isComplaint || isUnknown) {
+      if (reviewed === "Yes") doneList.push(r);
+      else complaintList.push(r);
     }
   });
 
   // KPIs
-  document.getElementById("k-five").textContent    = fiveList.length;
-  document.getElementById("k-four").textContent    = fourCount;
-  document.getElementById("k-low").textContent     = lowCount;
-  document.getElementById("k-noreply").textContent = noreplyList.length;
-  document.getElementById("k-review").textContent  = reviewList.length;
+  document.getElementById("k-reviews").textContent  = reviewsList.length;
+  document.getElementById("k-noreview").textContent = noreviewList.length;
+  document.getElementById("k-noreply").textContent  = noreplyList.length;
+  document.getElementById("k-complaint").textContent = complaintList.length;
+  document.getElementById("k-done").textContent     = doneList.length;
 
   // Tab counts
-  document.getElementById("tc-five").textContent   = fiveList.length;
-  document.getElementById("tc-noreply").textContent = noreplyList.length;
-  document.getElementById("tc-review").textContent  = reviewList.length;
-  document.getElementById("tc-done").textContent    = doneList.length;
+  document.getElementById("tc-reviews").textContent   = reviewsList.length;
+  document.getElementById("tc-noreview").textContent  = noreviewList.length;
+  document.getElementById("tc-noreply").textContent   = noreplyList.length;
+  document.getElementById("tc-complaint").textContent = complaintList.length;
+  document.getElementById("tc-done").textContent      = doneList.length;
 
-  // Alert style on Needs Review tab if > 0
-  var revTab = document.getElementById("tab-review");
-  if (reviewList.length > 0) revTab.classList.add("alert-tab");
-  else revTab.classList.remove("alert-tab");
+  // Alert style on Complaint tab if > 0
+  var cmpTab = document.getElementById("tab-complaint");
+  if (complaintList.length > 0) cmpTab.classList.add("alert-tab");
+  else cmpTab.classList.remove("alert-tab");
 
-  renderFive(fiveList);
+  renderReviews(reviewsList);
+  renderNoReview(noreviewList);
   renderNoReply(noreplyList);
-  renderReview(reviewList);
+  renderComplaint(complaintList);
   renderDone(doneList);
 }
 
@@ -359,25 +371,25 @@ function complaintCell(text) {
   return text ? esc(text) : "<em style='color:#aaa'>No details provided</em>";
 }
 
-function renderFeedback(list) {
-  var tb = document.getElementById("body-feedback");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No complaints or feedback for this date.</td></tr>"; return; }
+function renderReviews(list) {
+  var tb = document.getElementById("body-reviews");
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No reviews given for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
-    var isLate = r.routedTo === "Late Complaint";
+    chatThreads[r.row] = r.thread || "";
     return "<tr>" +
-      "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
+      "<td>" + esc(r.name) + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
-      "<td>" + ratingBadge(r.rating) + "</td>" +
-      "<td>" + categoryBadge(r.category) + "</td>" +
-      "<td class='complaint-cell'>" + complaintCell(r.complaint) + "</td>" +
+      "<td>" + esc(r.phone) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
+      "<td><span class='rating-badge r5'>⭐ Review Sent</span></td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
 }
 
-function renderNoReply(list) {
-  var tb = document.getElementById("body-noreply");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>All guests replied for this date.</td></tr>"; return; }
+function renderNoReview(list) {
+  var tb = document.getElementById("body-noreview");
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>No guests opted out for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     chatThreads[r.row] = r.thread || "";
     return "<tr>" +
@@ -390,20 +402,35 @@ function renderNoReply(list) {
   }).join("");
 }
 
-function renderReview(list) {
-  var tb = document.getElementById("body-review");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='8' class='empty'>All feedback reviewed. ✓</td></tr>"; return; }
+function renderNoReply(list) {
+  var tb = document.getElementById("body-noreply");
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='5' class='empty'>All guests responded for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
-    var isLate = r.routedTo === "Late Complaint";
+    chatThreads[r.row] = r.thread || "";
+    return "<tr>" +
+      "<td>" + esc(r.name) + "</td>" +
+      "<td>" + esc(r.room) + "</td>" +
+      "<td>" + esc(r.phone) + "</td>" +
+      "<td>" + fmtDate(r.date) + "</td>" +
+      "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
+      "</tr>";
+  }).join("");
+}
+
+function renderComplaint(list) {
+  var tb = document.getElementById("body-complaint");
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='7' class='empty'>No pending complaints. ✓</td></tr>"; return; }
+  tb.innerHTML = list.map(function(r) {
+    var isLate   = r.routedTo === "Late Complaint";
+    var isUnknown = r.rating === "Unknown" || r.routedTo === "Unknown Reply";
     chatThreads[r.row] = r.thread || "";
     return "<tr id='rv-" + r.row + "'>" +
-      "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
+      "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + (isUnknown ? " <span style='font-size:10px;color:#8e44ad'>[AI]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
-      "<td>" + ratingBadge(r.rating) + "</td>" +
       "<td>" + categoryBadge(r.category) + "</td>" +
       "<td class='complaint-cell'>" + complaintCell(r.complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
-      "<td><button class='reviewed-btn' onclick='markReviewed(" + r.row + ",this)'>Mark Reviewed</button></td>" +
+      "<td><button class='reviewed-btn' onclick='markReviewed(" + r.row + ",this)'>Mark Done</button></td>" +
       "<td><button class='chat-btn' onclick='chatOpen(" + r.row + ",\"" + esc(r.phone) + "\",\"" + esc(r.name) + "\")'>💬 Chat</button></td>" +
       "</tr>";
   }).join("");
@@ -411,14 +438,13 @@ function renderReview(list) {
 
 function renderDone(list) {
   var tb = document.getElementById("body-done");
-  if (!list.length) { tb.innerHTML = "<tr><td colspan='7' class='empty'>No reviewed complaints for this date.</td></tr>"; return; }
+  if (!list.length) { tb.innerHTML = "<tr><td colspan='6' class='empty'>No resolved complaints for this date.</td></tr>"; return; }
   tb.innerHTML = list.map(function(r) {
     var isLate = r.routedTo === "Late Complaint";
     chatThreads[r.row] = r.thread || "";
     return "<tr style='opacity:.7'>" +
       "<td>" + esc(r.name) + (isLate ? " <span style='font-size:10px;color:#e67e22'>[LATE]</span>" : "") + "</td>" +
       "<td>" + esc(r.room) + "</td>" +
-      "<td>" + ratingBadge(r.rating) + "</td>" +
       "<td>" + categoryBadge(r.category) + "</td>" +
       "<td class='complaint-cell'>" + complaintCell(r.complaint) + "</td>" +
       "<td>" + fmtDate(r.date) + "</td>" +
@@ -438,10 +464,12 @@ function markReviewed(rowNum, btn) {
       if (tr) tr.style.opacity = "0.4";
       btn.textContent = "Reviewed ✓";
       // Update KPI
-      var cur = parseInt(document.getElementById("k-review").textContent) || 0;
-      if (cur > 0) document.getElementById("k-review").textContent = cur - 1;
-      var cur2 = parseInt(document.getElementById("tc-review").textContent) || 0;
-      if (cur2 > 0) document.getElementById("tc-review").textContent = cur2 - 1;
+      var cur = parseInt(document.getElementById("k-complaint").textContent) || 0;
+      if (cur > 0) document.getElementById("k-complaint").textContent = cur - 1;
+      var cur2 = parseInt(document.getElementById("tc-complaint").textContent) || 0;
+      if (cur2 > 0) document.getElementById("tc-complaint").textContent = cur2 - 1;
+      var curDone = parseInt(document.getElementById("k-done").textContent) || 0;
+      document.getElementById("k-done").textContent = curDone + 1;
     })
     .catch(function() {
       btn.disabled = false;
@@ -450,7 +478,7 @@ function markReviewed(rowNum, btn) {
 }
 
 function switchTab(name) {
-  ["five","noreply","review","done"].forEach(function(t) {
+  ["reviews","noreview","noreply","complaint","done"].forEach(function(t) {
     document.getElementById("panel-" + t).style.display = t === name ? "" : "none";
     document.getElementById("tab-" + t).classList.toggle("active", t === name);
   });
@@ -467,17 +495,17 @@ function renderWeekChart() {
 
   var complaints = days.map(function(day) {
     return allData.filter(function(r) {
-      var rating   = parseInt(r.rating) || 0;
       var routedTo = r.routedTo.trim();
-      var noReply  = r.state.trim() === "" || r.state.trim() === "pending_rating";
-      return r.date === day && r.sent === "Yes" && !noReply &&
-             ((rating >= 1 && rating <= 3) || routedTo === "Late Complaint");
+      var rating   = (r.rating || "").trim();
+      return r.date === day && r.sent === "Yes" &&
+             (rating === "Complaint" || routedTo === "Internal Complaint" || routedTo === "Late Complaint" || routedTo === "Unknown Reply");
     }).length;
   });
 
-  var fiveStars = days.map(function(day) {
+  var reviews = days.map(function(day) {
     return allData.filter(function(r) {
-      return r.date === day && r.sent === "Yes" && parseInt(r.rating) === 5;
+      return r.date === day && r.sent === "Yes" &&
+             ((r.rating || "").trim() === "Positive" || r.routedTo.trim() === "Google Review");
     }).length;
   });
 
@@ -494,7 +522,7 @@ function renderWeekChart() {
       labels: labels,
       datasets: [
         {
-          label: "Complaints (1–3★)",
+          label: "Complaints",
           data: complaints,
           backgroundColor: "#f8d7da",
           borderColor: "#c0392b",
@@ -502,8 +530,8 @@ function renderWeekChart() {
           borderRadius: 4
         },
         {
-          label: "5 Star",
-          data: fiveStars,
+          label: "Reviews Given",
+          data: reviews,
           backgroundColor: "#d4edda",
           borderColor: "#1a7a4a",
           borderWidth: 1,
